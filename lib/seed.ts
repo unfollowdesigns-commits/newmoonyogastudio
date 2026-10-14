@@ -17,7 +17,9 @@ export const SCHEDULE_DAYS = 14;
 
 export const STUDIO = {
   name: "New Moon Yoga Studio",
-  location: "Les Jardins de Carthage, Tunis",
+  address: "5 Rue Kart Hadsht",
+  area: "Les Jardins de Carthage, Tunis",
+  maps: "https://maps.app.goo.gl/9tss2c4gsd8VYbKh7",
   phoneDisplay: "56 775 096",
   whatsapp: "https://wa.me/21656775096",
   instagram: "https://www.instagram.com/new_moon_yoga_studio/",

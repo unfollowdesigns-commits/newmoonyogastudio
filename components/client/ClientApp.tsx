@@ -667,14 +667,21 @@ function Profile({ studio, account }: { studio: StudioState; account: { signIn: 
 
       <div className="mt-6 rounded-3xl bg-linen p-5">
         <h3 className="font-display text-[20px]">{t("profile.visit")}</h3>
-        <p className="mt-1 flex items-center gap-1.5 text-[13.5px] text-muted">
-          <Icon name="pin" size={16} /> {STUDIO.location}
-        </p>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <a href={STUDIO.whatsapp} target="_blank" rel="noreferrer" className="rounded-full bg-plum py-3 text-center text-[14px] text-linen">
-            WhatsApp {STUDIO.phoneDisplay}
+        <a href={STUDIO.maps} target="_blank" rel="noreferrer" className="mt-2 flex items-start gap-2 text-[13.5px] text-muted">
+          <Icon name="pin" size={18} className="mt-0.5 shrink-0 text-plum" />
+          <span>
+            <span className="block text-ink">New Moon Yoga Studio</span>
+            {STUDIO.address}, {STUDIO.area}
+          </span>
+        </a>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <a href={STUDIO.maps} target="_blank" rel="noreferrer" className="rounded-full border border-stone-deep py-3 text-center text-[13.5px]">
+            {t("profile.directions")}
           </a>
-          <a href={STUDIO.instagram} target="_blank" rel="noreferrer" className="rounded-full border border-stone-deep py-3 text-center text-[14px]">
+          <a href={STUDIO.whatsapp} target="_blank" rel="noreferrer" className="rounded-full bg-plum py-3 text-center text-[13.5px] text-linen">
+            WhatsApp
+          </a>
+          <a href={STUDIO.instagram} target="_blank" rel="noreferrer" className="rounded-full border border-stone-deep py-3 text-center text-[13.5px]">
             Instagram
           </a>
         </div>

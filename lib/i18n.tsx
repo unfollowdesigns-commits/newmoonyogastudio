@@ -71,7 +71,7 @@ const fr = {
   "class.spotsLeft": "Places restantes",
   "class.ofCap": "{n} sur {cap}",
   "class.full": "Complet",
-  "class.questions": "Une question ? WhatsApp {phone}",
+  "class.questions": "Une question ? Écrivez-nous sur WhatsApp",
   "class.bookedTitle": "Vous êtes inscrite",
   "class.bookedBody": "Arrivez 10 minutes en avance pour vous installer.",
   "class.waitPos": "Vous êtes n°{n} sur la liste d'attente. Si une place se libère, vous êtes inscrite automatiquement — le cours apparaîtra dans « Mes cours ».",
@@ -368,6 +368,8 @@ const fr = {
   "settings.cutoff": "Fermeture des réservations",
   "settings.cutoffSub": "Plus de réservation possible dans ce délai avant la séance.",
 
+  "profile.directions": "Itinéraire",
+
   // data labels
   "style.Women's yoga": "Yoga féminin",
   "style.Anti-stress": "Anti-stress",
@@ -467,7 +469,7 @@ const en: Record<Key, string> = {
   "class.spotsLeft": "Spots left",
   "class.ofCap": "{n} of {cap}",
   "class.full": "Full",
-  "class.questions": "Questions? WhatsApp {phone}",
+  "class.questions": "Questions? Message us on WhatsApp",
   "class.bookedTitle": "You're booked",
   "class.bookedBody": "Arrive 10 minutes early to settle in.",
   "class.waitPos": "You're #{n} on the waitlist. If a spot opens you're booked automatically — it will show in \"My classes\".",
@@ -757,6 +759,7 @@ const en: Record<Key, string> = {
   "profile.policyEvents": "Workshops and events: cancel at least 24h before.",
   "settings.cutoff": "Booking cut-off",
   "settings.cutoffSub": "No new bookings within this time before class.",
+  "profile.directions": "Directions",
   "style.Women's yoga": "Women's yoga",
   "style.Anti-stress": "Anti-stress",
   "style.Back care": "Back care",

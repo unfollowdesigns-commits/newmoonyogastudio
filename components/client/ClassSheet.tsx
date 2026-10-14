@@ -99,7 +99,7 @@ function Body({
 
         <p className="text-[14.5px] leading-relaxed text-ink/80">{i.desc(session)}</p>
         <a href={STUDIO.whatsapp} target="_blank" rel="noreferrer" className="inline-block text-[13px] text-plum underline underline-offset-4">
-          {t("class.questions", { phone: STUDIO.phoneDisplay })}
+          {t("class.questions")}
         </a>
 
         {mine && (
