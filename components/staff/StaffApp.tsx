@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { STYLE_META } from "@/lib/seed";
-import { addDays, dayKey, formatDayShort, formatTime, relativeDay, startOfDay } from "@/lib/date";
+import { addDays, dayKey, formatTime, startOfDay } from "@/lib/date";
+import { LangToggle, useT } from "@/lib/i18n";
 import {
   activeBookings,
   addGuest,
@@ -18,30 +19,33 @@ import {
   toggleCheckIn,
   updateSettings,
   useStudio,
+  type Result,
   waiveFee,
 } from "@/lib/store";
 import type { Booking, Session, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
 
 type View = "classes" | "inventory" | "hours" | "settings";
-type Notify = (r: { ok: boolean; message: string }) => void;
+type Notify = (r: Result) => void;
 
 export default function StaffApp() {
   const studio = useStudio();
   const [view, setView] = useState<View>("classes");
   const [staffId, setStaffId] = useState("desk");
   const { toast, show } = useToast();
-  const notify: Notify = (r) => show(r.message, r.ok ? "ok" : "warn");
+  const L = useT();
+  const t = L.t;
+  const notify: Notify = (r) => show(L.msg(r), r.ok ? "ok" : "warn");
 
   if (!studio) return <Loading />;
   const me = studio.instructors.find((i) => i.id === staffId)!;
   const onShift = studio.shifts.some((s) => s.staffId === staffId && !s.end);
 
   const nav: [View, string, string][] = [
-    ["classes", "users", "Classes & rosters"],
-    ["inventory", "box", "Rooms & equipment"],
-    ["hours", "clock", "Hours"],
-    ["settings", "settings", "Policies"],
+    ["classes", "users", t("staff.nav.classes")],
+    ["inventory", "box", t("staff.nav.inventory")],
+    ["hours", "clock", t("staff.nav.hours")],
+    ["settings", "settings", t("staff.nav.settings")],
   ];
 
   return (
@@ -49,10 +53,13 @@ export default function StaffApp() {
       {/* sidebar / topbar */}
       <aside className="sticky top-0 z-30 border-b border-stone bg-linen/95 backdrop-blur lg:h-dvh lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),14px)] pb-3 lg:block lg:pt-7">
-          <Wordmark sub="Staff Portal" />
-          <Link href="/" className="text-[12.5px] text-plum lg:hidden">
-            Client app →
-          </Link>
+          <Wordmark sub={t("brand.staff")} />
+          <div className="flex items-center gap-3 lg:mt-4">
+            <LangToggle />
+            <Link href="/" className="text-[12.5px] text-plum lg:hidden">
+              {t("staff.clientApp")}
+            </Link>
+          </div>
         </div>
         <nav className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2 lg:mt-6 lg:flex-col lg:px-3">
           {nav.map(([key, icon, label]) => (
@@ -70,7 +77,7 @@ export default function StaffApp() {
         <div className="hidden px-5 lg:absolute lg:bottom-6 lg:block lg:w-64">
           <StaffSwitcher studio={studio} staffId={staffId} setStaffId={setStaffId} onShift={onShift} />
           <Link href="/" className="mt-4 block text-[12.5px] text-plum">
-            ← Open client app
+            {t("staff.openClient")}
           </Link>
         </div>
       </aside>
@@ -90,21 +97,23 @@ export default function StaffApp() {
 }
 
 function StaffSwitcher({ studio, staffId, setStaffId, onShift }: { studio: StudioState; staffId: string; setStaffId: (s: string) => void; onShift: boolean }) {
+  const L = useT();
+  const t = L.t;
   const me = studio.instructors.find((i) => i.id === staffId)!;
   return (
     <label className="flex items-center gap-3 rounded-2xl bg-linen p-3 shadow-soft lg:shadow-none">
-      <Avatar person={me} size={36} />
+      <Avatar person={me} name={L.person(me)} size={36} />
       <span className="min-w-0 flex-1">
-        <span className="block text-[11px] text-muted">Signed in as</span>
+        <span className="block text-[11px] text-muted">{t("staff.signedIn")}</span>
         <select value={staffId} onChange={(e) => setStaffId(e.target.value)} className="w-full truncate bg-transparent text-[14px] outline-none">
           {studio.instructors.map((i) => (
             <option key={i.id} value={i.id}>
-              {i.name} — {i.role === "teacher" ? "Teacher" : "Front desk"}
+              {i.role === "teacher" ? `${L.person(i)} — ${t("staff.teacher")}` : L.person(i)}
             </option>
           ))}
         </select>
       </span>
-      <span className={`h-2.5 w-2.5 rounded-full ${onShift ? "bg-mauve" : "bg-stone-deep"}`} title={onShift ? "On shift" : "Off shift"} />
+      <span className={`h-2.5 w-2.5 rounded-full ${onShift ? "bg-mauve" : "bg-stone-deep"}`} title={onShift ? t("staff.onShift") : t("staff.offShift")} />
     </label>
   );
 }
@@ -124,6 +133,8 @@ function PageTitle({ title, sub, right }: { title: string; sub?: string; right?:
 /* ——————————————— Classes & roster ——————————————— */
 
 function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: string; notify: Notify }) {
+  const L = useT();
+  const t = L.t;
   const today = startOfDay(new Date());
   const days = Array.from({ length: 8 }, (_, i) => addDays(today, i - 1));
   const [day, setDay] = useState(dayKey(today));
@@ -154,12 +165,12 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
   return (
     <div className="animate-fade">
       <PageTitle
-        title="Classes & rosters"
-        sub={relativeDay(day + "T12:00:00")}
+        title={t("staff.nav.classes")}
+        sub={L.relDay(day + "T12:00:00")}
         right={
           isTeacher && (
             <label className="flex items-center gap-2 text-[13px]">
-              <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-plum" /> My classes only
+              <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-plum" /> {t("staff.myOnly")}
             </label>
           )
         }
@@ -174,25 +185,25 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
               onClick={() => setDay(k)}
               className={`shrink-0 rounded-xl px-4 py-2 text-[13px] transition ${k === day ? "bg-ink text-linen" : "bg-linen text-ink/75"}`}
             >
-              {relativeDay(d) === formatDayShort(d) ? d.toLocaleDateString([], { weekday: "short", day: "numeric" }) : relativeDay(d)}
+              {L.relDay(d) === L.dayShort(d) ? d.toLocaleDateString(L.locale, { weekday: "short", day: "numeric" }) : L.relDay(d)}
             </button>
           );
         })}
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Kpi label="Booked" value={`${dayStats.booked}/${dayStats.cap}`} />
-        <Kpi label="Fill rate" value={dayStats.cap ? `${Math.round((dayStats.booked / dayStats.cap) * 100)}%` : "—"} />
-        <Kpi label="Checked in" value={dayStats.checked} />
-        <Kpi label="Waitlisted" value={dayStats.wait} />
+        <Kpi label={t("staff.kpi.booked")} value={`${dayStats.booked}/${dayStats.cap}`} />
+        <Kpi label={t("staff.kpi.fill")} value={dayStats.cap ? `${Math.round((dayStats.booked / dayStats.cap) * 100)}%` : "—"} />
+        <Kpi label={t("staff.kpi.checked")} value={dayStats.checked} />
+        <Kpi label={t("staff.kpi.wait")} value={dayStats.wait} />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="overflow-hidden rounded-3xl bg-linen shadow-soft">
-          {sessions.length === 0 && <p className="p-8 text-center text-[14px] text-muted">No classes this day.</p>}
+          {sessions.length === 0 && <p className="p-8 text-center text-[14px] text-muted">{t("staff.noClasses")}</p>}
           <ul className="divide-y divide-stone">
             {sessions.map((s) => {
-              const t = studio.instructors.find((i) => i.id === s.instructorId)!;
+              const teacher = studio.instructors.find((i) => i.id === s.instructorId)!;
               const room = studio.rooms.find((r) => r.id === s.roomId)!;
               const booked = activeBookings(s).length;
               const checked = s.bookings.filter((b) => b.status === "checked-in").length;
@@ -209,7 +220,7 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
                         <span className="truncate text-[15px] font-medium">{s.title}</span>
                       </div>
                       <div className="mt-0.5 truncate text-[12.5px] text-muted">
-                        {t.name} · {room.name}
+                        {L.person(teacher)} · {L.room(room)}
                       </div>
                       <div className="mt-2 max-w-[260px]">
                         <CapacityBar used={booked} total={s.capacity} waitlist={s.waitlist.length} />
@@ -219,7 +230,7 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
                       <div>
                         {booked}/{s.capacity}
                       </div>
-                      <div className="text-muted">{checked} in</div>
+                      <div className="text-muted">{t("staff.in", { n: checked })}</div>
                       {s.waitlist.length > 0 && <div className="text-rose">+{s.waitlist.length} wait</div>}
                     </div>
                   </button>
@@ -230,25 +241,25 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
         </div>
 
         <div className="rounded-3xl bg-linen p-5 shadow-soft">
-          <h2 className="font-display text-[22px]">Late cancellations</h2>
+          <h2 className="font-display text-[22px]">{t("staff.late")}</h2>
           <p className="text-[12.5px] text-muted">
-            Within {studio.settings.lateCancelHours}h · {studio.settings.lateCancelFee} DT fee
+            {t("staff.lateSub", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })}
           </p>
-          {lateQueue.length === 0 && <p className="mt-4 text-[13px] text-muted">None — lovely.</p>}
+          {lateQueue.length === 0 && <p className="mt-4 text-[13px] text-muted">{t("staff.lateNone")}</p>}
           <ul className="mt-3 divide-y divide-stone">
             {lateQueue.slice(0, 8).map(({ s, b }) => (
               <li key={b.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <div className="truncate text-[14px]">{b.name}</div>
                   <div className="truncate text-[12px] text-muted">
-                    {s.title} · {relativeDay(s.start)}
+                    {s.title} · {L.relDay(s.start)}
                   </div>
                 </div>
                 <button
                   onClick={() => notify(waiveFee(s.id, b.id))}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] ${b.feeWaived ? "bg-blush text-plum" : "border border-rose/40 text-rose"}`}
                 >
-                  {b.feeWaived ? "Waived ✓" : "Waive fee"}
+                  {b.feeWaived ? t("staff.waived") : t("staff.waive")}
                 </button>
               </li>
             ))}
@@ -279,14 +290,18 @@ const STATUS_STYLE: Record<Booking["status"], string> = {
 };
 
 function RosterSheet({ studio, session, onClose, notify }: { studio: StudioState; session: Session | null; onClose: () => void; notify: Notify }) {
+  const L = useT();
+  const t = L.t;
   return (
-    <Sheet open={!!session} onClose={onClose} label="Roster">
+    <Sheet open={!!session} onClose={onClose} label={session?.title ?? ""}>
       {session && <Roster key={session.id} studio={studio} s={session} notify={notify} />}
     </Sheet>
   );
 }
 
 function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify: Notify }) {
+  const L = useT();
+  const t = L.t;
   const [q, setQ] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestOf, setGuestOf] = useState("");
@@ -305,11 +320,11 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] uppercase tracking-[0.2em]" style={{ color: STYLE_META[s.style].hue }}>
-            {s.style} · {formatDayShort(s.start)} · {formatTime(s.start)}
+            {L.style(s.style)} · {L.dayShort(s.start)} · {formatTime(s.start)}
           </div>
           <h2 className="mt-1 font-display text-[28px] leading-tight">{s.title}</h2>
           <p className="text-[13px] text-muted">
-            {teacher.name} · {room.name}
+            {L.person(teacher)} · {L.room(room)}
           </p>
         </div>
         <div className="text-right">
@@ -322,13 +337,13 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
 
       {mats && matsReady < active.length && (
         <p className="mt-3 rounded-xl bg-rose-soft px-3 py-2 text-[12.5px] text-rose">
-          Only {matsReady} usable {room.unit}s in {room.name} for {active.length} students — pull spares.
+          {t("staff.lowMats", { n: matsReady, unit: L.unit(room), room: L.room(room), count: active.length })}
         </p>
       )}
 
       <div className="mt-4 flex items-center gap-2 rounded-xl border border-stone bg-sand/60 px-3">
         <Icon name="search" size={16} className="text-muted" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roster" className="w-full bg-transparent py-2.5 text-[14px] outline-none" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("staff.search")} className="w-full bg-transparent py-2.5 text-[14px] outline-none" />
       </div>
 
       <ul className="mt-3 divide-y divide-stone">
@@ -339,33 +354,33 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 truncate text-[14px]">
                   {b.name}
-                  {b.guest && <span className="rounded bg-clay-soft px-1.5 text-[10px] text-clay">GUEST</span>}
+                  {b.guest && <span className="rounded bg-clay-soft px-1.5 text-[10px] text-clay">{t("staff.guest")}</span>}
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10.5px] ${STATUS_STYLE[b.status]}`}>
-                  {b.status.replace("-", " ")}
-                  {b.guestOf ? ` · of ${b.guestOf}` : ""}
+                  {t(`status.${b.status}`)}
+                  {b.guestOf ? t("staff.of", { name: b.guestOf }) : ""}
                 </span>
               </div>
               <button
                 onClick={() => notify(toggleCheckIn(s.id, b.id))}
-                aria-label={b.status === "checked-in" ? `Undo check-in for ${b.name}` : `Check in ${b.name}`}
+                aria-label={b.status === "checked-in" ? t("staff.undoCheck", { name: b.name }) : t("staff.check", { name: b.name })}
                 className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
                   b.status === "checked-in" ? "bg-plum text-linen" : "border border-stone-deep text-muted hover:border-mauve"
                 }`}
               >
                 <Icon name="check" size={18} />
               </button>
-              <button onClick={() => setMenu(menu === b.id ? null : b.id)} className="h-10 w-8 text-[18px] text-muted" aria-label="More actions">
+              <button onClick={() => setMenu(menu === b.id ? null : b.id)} className="h-10 w-8 text-[18px] text-muted" aria-label={t("staff.more")}>
                 ⋯
               </button>
             </div>
             {menu === b.id && (
               <div className="mt-2 ml-[44px] flex animate-rise flex-wrap gap-2">
-                <SmallBtn onClick={() => (notify(markNoShow(s.id, b.id)), setMenu(null))}>{b.status === "no-show" ? "Undo no-show" : "No-show"}</SmallBtn>
+                <SmallBtn onClick={() => (notify(markNoShow(s.id, b.id)), setMenu(null))}>{b.status === "no-show" ? t("staff.undoNoShow") : t("staff.noShow")}</SmallBtn>
                 <SmallBtn onClick={() => (notify(staffCancel(s.id, b.id, true)), setMenu(null))} danger>
-                  Late cancel
+                  {t("staff.lateCancel")}
                 </SmallBtn>
-                <SmallBtn onClick={() => (notify(staffCancel(s.id, b.id, false)), setMenu(null))}>Cancel (no fee)</SmallBtn>
+                <SmallBtn onClick={() => (notify(staffCancel(s.id, b.id, false)), setMenu(null))}>{t("staff.freeCancel")}</SmallBtn>
               </div>
             )}
           </li>
@@ -375,10 +390,10 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
       {/* waitlist */}
       <section className="mt-6">
         <h3 className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-muted">
-          Waitlist <span>{studio.settings.autoPromote ? "Auto-promote on" : "Manual promote"}</span>
+          {t("staff.waitlist")} <span>{studio.settings.autoPromote ? t("staff.autoOn") : t("staff.autoOff")}</span>
         </h3>
         {s.waitlist.length === 0 ? (
-          <p className="mt-2 text-[13px] text-muted">No one waiting.</p>
+          <p className="mt-2 text-[13px] text-muted">{t("staff.nobodyWaiting")}</p>
         ) : (
           <ol className="mt-2 space-y-2">
             {s.waitlist.map((w, i) => (
@@ -388,7 +403,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
                 <SmallBtn onClick={() => notify(promote(s.id, w.id))} disabled={left === 0}>
                   Promote
                 </SmallBtn>
-                <button onClick={() => notify(removeFromWaitlist(s.id, w.id))} className="p-1 text-muted" aria-label={`Remove ${w.name}`}>
+                <button onClick={() => notify(removeFromWaitlist(s.id, w.id))} className="p-1 text-muted" aria-label={t("staff.remove", { name: w.name })}>
                   <Icon name="close" size={16} />
                 </button>
               </li>
@@ -399,10 +414,10 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
 
       {/* guest */}
       <section className="mt-6 rounded-2xl border border-stone p-4">
-        <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">Guest reservation</h3>
+        <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">{t("staff.guestRes")}</h3>
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Guest name" className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
-          <input value={guestOf} onChange={(e) => setGuestOf(e.target.value)} placeholder="Guest of (optional)" className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
+          <input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder={t("staff.guestName")} className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
+          <input value={guestOf} onChange={(e) => setGuestOf(e.target.value)} placeholder={t("staff.guestOf")} className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
           <button
             disabled={left === 0}
             onClick={() => {
@@ -422,13 +437,13 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
 
       {cancelled.length > 0 && (
         <section className="mt-6">
-          <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">Cancelled</h3>
+          <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">{t("staff.cancelledList")}</h3>
           <ul className="mt-2 space-y-1 text-[13px]">
             {cancelled.map((b) => (
               <li key={b.id} className="flex justify-between text-muted">
                 <span>{b.name}</span>
                 <span className={b.status === "late-cancel" ? "text-rose" : ""}>
-                  {b.status === "late-cancel" ? (b.feeWaived ? "late · waived" : `late · ${studio.settings.lateCancelFee} DT`) : "cancelled"}
+                  {b.status === "late-cancel" ? (b.feeWaived ? t("staff.lateWaived") : t("staff.lateFee", { fee: studio.settings.lateCancelFee })) : t("staff.cancelledOne")}
                 </span>
               </li>
             ))}
@@ -457,10 +472,12 @@ function SmallBtn({ children, onClick, danger, disabled }: { children: React.Rea
 /* ——————————————— Inventory ——————————————— */
 
 function Inventory({ studio, notify }: { studio: StudioState; notify: Notify }) {
+  const L = useT();
+  const t = L.t;
   const today = dayKey(new Date());
   return (
     <div className="animate-fade">
-      <PageTitle title="Rooms & equipment" sub="Track mats, props, hammocks and instruments per room." />
+      <PageTitle title={t("inv.title")} sub={t("inv.sub")} />
       <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {studio.rooms.map((room) => {
           const items = studio.inventory.filter((i) => i.roomId === room.id);
@@ -469,7 +486,7 @@ function Inventory({ studio, notify }: { studio: StudioState; notify: Notify }) 
           return (
             <section key={room.id} className="rounded-3xl bg-linen p-5 shadow-soft">
               <div className="flex items-baseline justify-between">
-                <h2 className="font-display text-[24px]">{room.name}</h2>
+                <h2 className="font-display text-[24px]">{L.room(room)}</h2>
                 <span className="text-[12px] text-muted">
                   Cap. {room.capacity} · peak today {peak}
                 </span>
@@ -481,14 +498,14 @@ function Inventory({ studio, notify }: { studio: StudioState; notify: Notify }) 
                   return (
                     <li key={it.id} className="py-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[14px]">{it.name}</span>
+                        <span className="text-[14px]">{L.item(it)}</span>
                         <span className={`text-[12px] ${low ? "text-rose" : "text-muted"}`}>
-                          {usable} usable{low ? ` · need ${it.minimum}` : ""}
+                          {t("inv.usable", { n: usable })}{low ? t("inv.need", { n: it.minimum }) : ""}
                         </span>
                       </div>
                       <div className="mt-2 flex items-center gap-4 text-[12px] text-muted">
-                        <Stepper label="Total" value={it.total} onDec={() => notify(adjustInventory(it.id, "total", -1))} onInc={() => notify(adjustInventory(it.id, "total", 1))} />
-                        <Stepper label="In repair" value={it.inRepair} onDec={() => notify(adjustInventory(it.id, "inRepair", -1))} onInc={() => notify(adjustInventory(it.id, "inRepair", 1))} />
+                        <Stepper label={t("inv.total")} value={it.total} onDec={() => notify(adjustInventory(it.id, "total", -1))} onInc={() => notify(adjustInventory(it.id, "total", 1))} />
+                        <Stepper label={t("inv.repair")} value={it.inRepair} onDec={() => notify(adjustInventory(it.id, "inRepair", -1))} onInc={() => notify(adjustInventory(it.id, "inRepair", 1))} />
                       </div>
                     </li>
                   );
@@ -503,15 +520,17 @@ function Inventory({ studio, notify }: { studio: StudioState; notify: Notify }) 
 }
 
 function Stepper({ label, value, onDec, onInc }: { label: string; value: number; onDec: () => void; onInc: () => void }) {
+  const L = useT();
+  const t = L.t;
   return (
     <span className="flex items-center gap-2">
       {label}
       <span className="flex items-center rounded-full border border-stone">
-        <button onClick={onDec} className="p-1.5" aria-label={`Decrease ${label}`}>
+        <button onClick={onDec} className="p-1.5" aria-label={t("inv.dec", { label })}>
           <Icon name="minus" size={13} />
         </button>
         <span className="w-6 text-center text-[13px] text-ink">{value}</span>
-        <button onClick={onInc} className="p-1.5" aria-label={`Increase ${label}`}>
+        <button onClick={onInc} className="p-1.5" aria-label={t("inv.inc", { label })}>
           <Icon name="plus" size={13} />
         </button>
       </span>
@@ -522,6 +541,8 @@ function Stepper({ label, value, onDec, onInc }: { label: string; value: number;
 /* ——————————————— Hours ——————————————— */
 
 function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify: Notify }) {
+  const L = useT();
+  const t = L.t;
   const weekStart = addDays(startOfDay(new Date()), -6);
   const open = studio.shifts.find((s) => s.staffId === me && !s.end);
   const hrs = (start: string, end?: string) => ((end ? new Date(end) : new Date()).getTime() - new Date(start).getTime()) / 36e5;
@@ -536,24 +557,24 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
 
   return (
     <div className="animate-fade">
-      <PageTitle title="Hours" sub="Clock in, clock out, and see the week at a glance." />
+      <PageTitle title={t("hours.title")} sub={t("hours.sub")} />
       <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
         <section className="rounded-3xl bg-ink p-6 text-linen shadow-lift">
-          <div className="text-[11px] uppercase tracking-[0.25em] opacity-60">{open ? "On shift since" : "Off shift"}</div>
+          <div className="text-[11px] uppercase tracking-[0.25em] opacity-60">{open ? t("hours.onSince") : t("hours.off")}</div>
           <div className="mt-2 font-display text-[40px] leading-none">{open ? formatTime(open.start) : "—"}</div>
-          {open && <div className="mt-1 text-[13px] opacity-70">{hrs(open.start).toFixed(1)} hours so far</div>}
+          {open && <div className="mt-1 text-[13px] opacity-70">{t("hours.soFar", { n: hrs(open.start).toFixed(1) })}</div>}
           <button
             onClick={() => notify(clockToggle(me))}
             className={`mt-6 w-full rounded-full py-3.5 text-[15px] ${open ? "bg-linen text-ink" : "bg-mauve text-linen"}`}
           >
-            {open ? "Clock out" : "Clock in"}
+            {open ? t("hours.clockOut") : t("hours.clockIn")}
           </button>
           <ul className="mt-6 space-y-2 text-[13px]">
             {mine.map((s) => (
               <li key={s.id} className="flex justify-between opacity-80">
-                <span>{formatDayShort(s.start)}</span>
+                <span>{L.dayShort(s.start)}</span>
                 <span>
-                  {formatTime(s.start)} – {s.end ? formatTime(s.end) : "now"} · {hrs(s.start, s.end).toFixed(1)}h
+                  {formatTime(s.start)} – {s.end ? formatTime(s.end) : t("hours.now")} · {hrs(s.start, s.end).toFixed(1)}h
                 </span>
               </li>
             ))}
@@ -561,14 +582,14 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
         </section>
 
         <section className="overflow-x-auto rounded-3xl bg-linen p-5 shadow-soft">
-          <h2 className="font-display text-[22px]">Last 7 days</h2>
+          <h2 className="font-display text-[22px]">{t("hours.week")}</h2>
           <table className="mt-3 w-full min-w-[420px] text-left text-[13.5px]">
             <thead className="text-[11px] uppercase tracking-[0.15em] text-muted">
               <tr>
-                <th className="py-2 font-normal">Staff</th>
-                <th className="py-2 font-normal">Shifts</th>
-                <th className="py-2 font-normal">Classes taught</th>
-                <th className="py-2 text-right font-normal">Hours</th>
+                <th className="py-2 font-normal">{t("hours.staff")}</th>
+                <th className="py-2 font-normal">{t("hours.shifts")}</th>
+                <th className="py-2 font-normal">{t("hours.taught")}</th>
+                <th className="py-2 text-right font-normal">{t("hours.hours")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone">
@@ -576,7 +597,7 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
                 <tr key={p.id}>
                   <td className="py-3">
                     <span className="flex items-center gap-2">
-                      <Avatar person={p} size={28} /> {p.name}
+                      <Avatar person={p} name={L.person(p)} size={28} /> {L.person(p)}
                     </span>
                   </td>
                   <td>{count}</td>
@@ -595,12 +616,14 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
 /* ——————————————— Policies ——————————————— */
 
 function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
+  const L = useT();
+  const t = L.t;
   const st = studio.settings;
   return (
     <div className="max-w-2xl animate-fade">
-      <PageTitle title="Policies" sub="Applied instantly to the client app." />
+      <PageTitle title={t("settings.title")} sub={t("settings.sub")} />
       <div className="space-y-4">
-        <Row title="Late-cancel window" sub="Cancellations inside this window are flagged as late.">
+        <Row title={t("settings.window")} sub={t("settings.windowSub")}>
           <select
             value={st.lateCancelHours}
             onChange={(e) => notify(updateSettings({ lateCancelHours: Number(e.target.value) }))}
@@ -608,12 +631,12 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
           >
             {[2, 4, 6, 8, 12, 24].map((h) => (
               <option key={h} value={h}>
-                {h} hours
+                {t("settings.hours", { n: h })}
               </option>
             ))}
           </select>
         </Row>
-        <Row title="Late-cancel fee" sub="Charged unless waived by staff.">
+        <Row title={t("settings.fee")} sub={t("settings.feeSub")}>
           <select
             value={st.lateCancelFee}
             onChange={(e) => notify(updateSettings({ lateCancelFee: Number(e.target.value) }))}
@@ -626,7 +649,7 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
             ))}
           </select>
         </Row>
-        <Row title="Auto-promote waitlist" sub="When a spot opens, book the next person automatically.">
+        <Row title={t("settings.auto")} sub={t("settings.autoSub")}>
           <button
             role="switch"
             aria-checked={st.autoPromote}
@@ -636,12 +659,12 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
             <span className={`absolute top-1 h-5 w-5 rounded-full bg-linen transition-all ${st.autoPromote ? "left-6" : "left-1"}`} />
           </button>
         </Row>
-        <Row title="Reset demo data" sub="Restores the sample schedule, rosters and inventory.">
+        <Row title={t("settings.reset")} sub={t("settings.resetSub")}>
           <button
             onClick={() => {
-              if (confirm("Reset all demo data?")) {
+              if (confirm(t("settings.confirm"))) {
                 resetDemo();
-                notify({ ok: true, message: "Demo data reset" });
+                notify({ ok: true, message: "msg.reset" });
               }
             }}
             className="rounded-full border border-rose/40 px-4 py-2 text-[13px] text-rose"
@@ -653,11 +676,11 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
 
       {studio.activity.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted">Recent activity</h2>
+          <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted">{t("settings.activity")}</h2>
           <ul className="mt-2 space-y-1.5 text-[13px]">
             {studio.activity.slice(0, 10).map((a) => (
               <li key={a.id} className="flex justify-between gap-4">
-                <span>{a.text}</span>
+                <span>{t(a.key, a.vars)}</span>
                 <span className="shrink-0 text-muted">{formatTime(a.at)}</span>
               </li>
             ))}

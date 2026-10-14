@@ -63,14 +63,16 @@ export function useStudio(): StudioState | null {
   return useSyncExternalStore(subscribe, get, () => null);
 }
 
-type Result = { ok: true; message: string } | { ok: false; message: string };
+// `message` is an i18n key; components translate it with `vars`.
+export type Result = { ok: boolean; message: string; vars?: Record<string, string | number> };
+type Log = { key: string; vars?: Record<string, string | number> };
 
-function update(fn: (draft: StudioState) => Result | void, log?: string): Result {
+function update(fn: (draft: StudioState) => Result | void, log?: Log): Result {
   const draft = structuredClone(get());
   const res = fn(draft) ?? { ok: true as const, message: "" };
   if (!res.ok) return res;
   if (log) {
-    draft.activity.unshift({ id: uid(), at: new Date().toISOString(), text: log });
+    draft.activity.unshift({ id: uid(), at: new Date().toISOString(), ...log });
     draft.activity = draft.activity.slice(0, 50);
   }
   state = draft;
@@ -138,10 +140,9 @@ function promoteNext(s: Session): string | null {
   return next.name;
 }
 
-function freeAndPromote(draft: StudioState, s: Session): string {
-  if (!draft.settings.autoPromote) return "";
-  const promoted = promoteNext(s);
-  return promoted ? ` ${promoted} was promoted from the waitlist.` : "";
+function freeAndPromote(draft: StudioState, s: Session): string | null {
+  if (!draft.settings.autoPromote) return null;
+  return promoteNext(s);
 }
 
 // ——— client actions ———
@@ -149,47 +150,44 @@ function freeAndPromote(draft: StudioState, s: Session): string {
 export function book(sessionId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
-    if (isPast(s)) return { ok: false, message: "This class has already started." };
-    if (myBooking(s, d.me.id)) return { ok: false, message: "You're already booked." };
-    if (spotsLeft(s) <= 0) return { ok: false, message: "This class just filled up — join the waitlist instead." };
+    if (isPast(s)) return { ok: false, message: "msg.started" };
+    if (myBooking(s, d.me.id)) return { ok: false, message: "msg.alreadyBooked" };
+    if (spotsLeft(s) <= 0) return { ok: false, message: "msg.justFull" };
     const chosen = firstFreeSpot(s);
     s.waitlist = s.waitlist.filter((w) => w.memberId !== d.me.id);
     s.bookings.push({ id: uid(), memberId: d.me.id, name: d.me.name, spot: chosen, status: "booked", createdAt: new Date().toISOString() });
-    return { ok: true, message: "You're in — see you on the mat." };
-  }, `${get().me.name} booked a class`);
+    return { ok: true, message: "msg.booked" };
+  }, { key: "log.booked", vars: { name: get().me.name } });
 }
 
 export function cancelMine(sessionId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
     const b = myBooking(s, d.me.id);
-    if (!b) return { ok: false, message: "No booking found." };
+    if (!b) return { ok: false, message: "msg.noBooking" };
     const late = hoursUntil(s.start) < d.settings.lateCancelHours;
     b.status = late ? "late-cancel" : "cancelled";
     b.cancelledAt = new Date().toISOString();
     b.spot = null;
     freeAndPromote(d, s);
-    return {
-      ok: true,
-      message: late ? `Cancelled. A ${d.settings.lateCancelFee} DT late-cancel fee applies.` : "Cancelled — no fee. See you soon.",
-    };
-  }, `${get().me.name} cancelled a booking`);
+    return { ok: true, message: late ? "msg.cancelLate" : "msg.cancelFree", vars: { fee: d.settings.lateCancelFee } };
+  }, { key: "log.cancelled", vars: { name: get().me.name } });
 }
 
 export function joinWaitlist(sessionId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
-    if (myWaitlistPosition(s, d.me.id)) return { ok: false, message: "You're already on the waitlist." };
+    if (myWaitlistPosition(s, d.me.id)) return { ok: false, message: "msg.alreadyWaiting" };
     s.waitlist.push({ id: uid(), memberId: d.me.id, name: d.me.name, joinedAt: new Date().toISOString() });
-    return { ok: true, message: `You're #${s.waitlist.length} on the waitlist. We'll book you automatically if a spot opens.` };
-  }, `${get().me.name} joined a waitlist`);
+    return { ok: true, message: "msg.waitJoined", vars: { n: s.waitlist.length } };
+  }, { key: "log.waitlist", vars: { name: get().me.name } });
 }
 
 export function leaveWaitlist(sessionId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
     s.waitlist = s.waitlist.filter((w) => w.memberId !== d.me.id);
-    return { ok: true, message: "Removed from the waitlist." };
+    return { ok: true, message: "msg.waitLeft" };
   });
 }
 
@@ -199,7 +197,7 @@ export function toggleCheckIn(sessionId: string, bookingId: string): Result {
   return update((d) => {
     const b = find(d, sessionId).bookings.find((x) => x.id === bookingId)!;
     b.status = b.status === "checked-in" ? "booked" : "checked-in";
-    return { ok: true, message: b.status === "checked-in" ? `${b.name} checked in` : `${b.name} un-checked` };
+    return { ok: true, message: b.status === "checked-in" ? "msg.checkedIn" : "msg.unchecked", vars: { name: b.name } };
   });
 }
 
@@ -207,7 +205,7 @@ export function markNoShow(sessionId: string, bookingId: string): Result {
   return update((d) => {
     const b = find(d, sessionId).bookings.find((x) => x.id === bookingId)!;
     b.status = b.status === "no-show" ? "booked" : "no-show";
-    return { ok: true, message: b.status === "no-show" ? `${b.name} marked no-show` : `${b.name} restored` };
+    return { ok: true, message: b.status === "no-show" ? "msg.noShow" : "msg.restored", vars: { name: b.name } };
   });
 }
 
@@ -218,35 +216,35 @@ export function staffCancel(sessionId: string, bookingId: string, late: boolean)
     b.status = late ? "late-cancel" : "cancelled";
     b.cancelledAt = new Date().toISOString();
     b.spot = null;
-    const extra = freeAndPromote(d, s);
-    return { ok: true, message: `${b.name} ${late ? "late-cancelled" : "cancelled"}.${extra}` };
-  }, "Staff cancelled a booking");
+    const promoted = freeAndPromote(d, s);
+    return { ok: true, message: late ? "msg.cancelledLate" : "msg.cancelled", vars: { name: b.name, promoted: promoted ?? "" } };
+  }, { key: "log.staffCancel" });
 }
 
 export function promote(sessionId: string, waitId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
-    if (spotsLeft(s) <= 0) return { ok: false, message: "No open spots. Cancel or move someone first." };
+    if (spotsLeft(s) <= 0) return { ok: false, message: "msg.noSpots" };
     const i = s.waitlist.findIndex((w) => w.id === waitId);
     const [w] = s.waitlist.splice(i, 1);
     s.bookings.push({ id: uid(), memberId: w.memberId, name: w.name, spot: firstFreeSpot(s), status: "booked", createdAt: new Date().toISOString() });
-    return { ok: true, message: `${w.name} promoted from waitlist.` };
-  }, "Staff promoted from waitlist");
+    return { ok: true, message: "msg.promoted", vars: { name: w.name } };
+  }, { key: "log.promoted" });
 }
 
 export function removeFromWaitlist(sessionId: string, waitId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
     s.waitlist = s.waitlist.filter((w) => w.id !== waitId);
-    return { ok: true, message: "Removed from waitlist." };
+    return { ok: true, message: "msg.removedWait" };
   });
 }
 
 export function addGuest(sessionId: string, name: string, guestOf: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
-    if (!name.trim()) return { ok: false, message: "Add the guest's name." };
-    if (spotsLeft(s) <= 0) return { ok: false, message: "Class is full." };
+    if (!name.trim()) return { ok: false, message: "msg.guestName" };
+    if (spotsLeft(s) <= 0) return { ok: false, message: "msg.classFull" };
     s.bookings.push({
       id: uid(),
       memberId: "guest-" + uid(),
@@ -257,15 +255,15 @@ export function addGuest(sessionId: string, name: string, guestOf: string): Resu
       guestOf: guestOf.trim() || undefined,
       createdAt: new Date().toISOString(),
     });
-    return { ok: true, message: `${name.trim()} added as a guest.` };
-  }, "Guest reservation added");
+    return { ok: true, message: "msg.guestAdded", vars: { name: name.trim() } };
+  }, { key: "log.guest" });
 }
 
 export function waiveFee(sessionId: string, bookingId: string): Result {
   return update((d) => {
     const b = find(d, sessionId).bookings.find((x) => x.id === bookingId)!;
     b.feeWaived = !b.feeWaived;
-    return { ok: true, message: b.feeWaived ? "Fee waived" : "Fee reinstated" };
+    return { ok: true, message: b.feeWaived ? "msg.feeWaived" : "msg.feeBack" };
   });
 }
 
@@ -274,7 +272,7 @@ export function adjustInventory(itemId: string, field: "total" | "inRepair", del
     const it = d.inventory.find((x) => x.id === itemId)!;
     const next = it[field] + delta;
     if (next < 0 || (field === "inRepair" && next > it.total) || (field === "total" && next < it.inRepair)) {
-      return { ok: false, message: "That count isn't possible." };
+      return { ok: false, message: "msg.badCount" };
     }
     it[field] = next;
     return { ok: true, message: "" };
@@ -286,17 +284,17 @@ export function clockToggle(staffId: string): Result {
     const open = d.shifts.find((x) => x.staffId === staffId && !x.end);
     if (open) {
       open.end = new Date().toISOString();
-      return { ok: true, message: "Clocked out. Rest well." };
+      return { ok: true, message: "msg.clockOut" };
     }
     d.shifts.push({ id: uid(), staffId, start: new Date().toISOString() });
-    return { ok: true, message: "Clocked in." };
+    return { ok: true, message: "msg.clockIn" };
   });
 }
 
 export function updateSettings(patch: Partial<Settings>): Result {
   return update((d) => {
     d.settings = { ...d.settings, ...patch };
-    return { ok: true, message: "Settings saved" };
+    return { ok: true, message: "msg.saved" };
   });
 }
 

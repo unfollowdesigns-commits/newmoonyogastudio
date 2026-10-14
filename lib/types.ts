@@ -49,7 +49,7 @@ export interface Session {
   start: string; // ISO
   durationMin: number;
   capacity: number;
-  description: string;
+  description: string; // i18n key (desc.<key>)
   bookings: Booking[];
   waitlist: WaitlistEntry[];
 }
@@ -73,13 +73,14 @@ export interface Shift {
 export interface ActivityEntry {
   id: string;
   at: string;
-  text: string;
+  key: string; // i18n key (log.<key>)
+  vars?: Record<string, string | number>;
 }
 
 export interface Member {
   id: string;
   name: string;
-  plan: string;
+  plan: string; // i18n key (plan.<key>)
   since: string;
 }
 

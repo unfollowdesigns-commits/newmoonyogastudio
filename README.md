@@ -11,6 +11,10 @@ A mobile-first booking app for **New Moon Yoga Studio** (Les Jardins de Carthage
 
 **Booking takes two taps:** tap a class, then tap **Reserve my spot**. Times use the French 24-hour format (8h30, 19h45).
 
+## Languages
+
+French (default) and English, switchable with the FR / EN toggle in the header of both apps; the choice is remembered per device. All strings live in `lib/i18n.tsx` — add or edit a key in both the `fr` and `en` dictionaries. Class names stay as the studio writes them.
+
 ## Timetable
 
 Configured in `lib/seed.ts` (`WEEK`):

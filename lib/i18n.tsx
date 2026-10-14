@@ -1,0 +1,653 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import type { Instructor, InventoryItem, Level, Room, Session, Style } from "./types";
+
+export type Lang = "fr" | "en";
+export const LANGS: Lang[] = ["fr", "en"];
+type Vars = Record<string, string | number>;
+
+const fr = {
+  // shell
+  "nav.schedule": "Planning",
+  "nav.bookings": "Mes cours",
+  "nav.profile": "Profil",
+  "brand.sub": "Yoga Studio",
+  "brand.staff": "Espace équipe",
+  "a11y.profile": "Profil",
+  "a11y.close": "Fermer",
+  "a11y.moreFilters": "Plus de filtres",
+  "a11y.prevMonth": "Mois précédent",
+  "a11y.nextMonth": "Mois suivant",
+  "lang.switch": "English",
+
+  // greeting & dates
+  "greet.morning": "Bonjour",
+  "greet.afternoon": "Bon après-midi",
+  "greet.evening": "Bonsoir",
+  "day.today": "Aujourd'hui",
+  "day.tomorrow": "Demain",
+
+  // schedule
+  "schedule.title1": "Trouvez votre",
+  "schedule.title2": "pratique",
+  "schedule.upNext": "Prochain cours",
+  "schedule.calendar": "Calendrier",
+  "schedule.filter": "Filtres",
+  "schedule.all": "Tous",
+  "schedule.emptyTitle": "Une journée calme",
+  "schedule.emptyBody": "Aucun cours ne correspond. Essayez un autre jour ou effacez les filtres.",
+  "schedule.clear": "Effacer les filtres",
+  "card.booked": "Réservé",
+  "card.waitlist": "Liste d'attente n°{n}",
+  "card.inSession": "En cours",
+  "card.full": "Complet · {n} en attente",
+  "card.left": "{n} restantes",
+  "card.open": "{n} places",
+
+  // filters
+  "filters.title": "Affiner",
+  "filters.reset": "Réinitialiser",
+  "filters.time": "Moment de la journée",
+  "filters.anyTime": "Toute la journée",
+  "filters.morning": "Matin",
+  "filters.midday": "Midi",
+  "filters.evening": "Soir",
+  "filters.instructor": "Professeur",
+  "filters.anyone": "Tous",
+  "filters.level": "Niveau",
+  "filters.anyLevel": "Tous niveaux",
+  "filters.room": "Salle",
+  "filters.anyRoom": "Toutes les salles",
+  "filters.show": "Voir les cours",
+
+  // month
+  "month.classes": "{n} cours",
+  "month.window": "Réservations ouvertes {n} jours à l'avance.",
+
+  // class sheet
+  "class.duration": "Durée",
+  "class.room": "Salle",
+  "class.spotsLeft": "Places restantes",
+  "class.ofCap": "{n} sur {cap}",
+  "class.full": "Complet",
+  "class.questions": "Une question ? WhatsApp {phone}",
+  "class.bookedTitle": "Vous êtes inscrite",
+  "class.bookedBody": "Arrivez 10 minutes en avance pour vous installer.",
+  "class.waitPos": "Vous êtes n°{n} sur la liste d'attente. Si une place se libère, nous vous inscrivons automatiquement et vous prévenons.",
+  "class.started": "Ce cours a commencé",
+  "class.lateWarn": "Moins de {h} h avant le cours — des frais d'annulation tardive de {fee} DT s'appliquent.",
+  "class.freeCancel": "Annulation gratuite — votre place revient à la prochaine personne en attente.",
+  "class.keep": "Garder ma place",
+  "class.cancelBooking": "Annuler la réservation",
+  "class.addCal": "Ajouter au calendrier",
+  "class.cancel": "Annuler",
+  "class.leaveWait": "Quitter la liste d'attente",
+  "class.reserve": "Réserver ma place",
+  "class.joinWait": "Liste d'attente · {n} avant vous",
+
+  // bookings
+  "bookings.title": "Mes cours",
+  "bookings.sub": "Vos réservations et listes d'attente.",
+  "bookings.emptyTitle": "Rien de prévu pour l'instant",
+  "bookings.emptyBody": "Votre prochain cours est à deux clics.",
+  "bookings.browse": "Voir le planning",
+  "bookings.with": "avec {name}",
+  "bookings.late": "Annulations tardives",
+  "bookings.waived": "Offert",
+
+  // profile
+  "profile.member": "Membre",
+  "profile.plan": "Formule",
+  "profile.since": "Depuis {date}",
+  "profile.upcoming": "À venir",
+  "profile.attended": "Cours suivis",
+  "profile.policies": "Règles du studio",
+  "profile.policy1": "Annulez au moins {h} heures avant le cours pour éviter des frais d'annulation tardive de {fee} DT.",
+  "profile.policy2": "Les listes d'attente avancent automatiquement — vous êtes inscrite et prévenue dès qu'une place se libère.",
+  "profile.policy3": "Le studio ouvre 15 minutes avant le cours. Tapis, briques et bolsters sont fournis.",
+  "profile.visit": "Nous trouver",
+  "profile.staff": "Espace équipe",
+  "profile.staffSub": "Pour les professeurs et l'accueil",
+  "plan.monthly": "Abonnement mensuel",
+
+  // toasts / results
+  "msg.started": "Ce cours a déjà commencé.",
+  "msg.alreadyBooked": "Vous êtes déjà inscrite.",
+  "msg.justFull": "Ce cours vient d'être complet — inscrivez-vous sur la liste d'attente.",
+  "msg.booked": "C'est réservé — à bientôt sur le tapis.",
+  "msg.noBooking": "Aucune réservation trouvée.",
+  "msg.cancelLate": "Annulé. Des frais d'annulation tardive de {fee} DT s'appliquent.",
+  "msg.cancelFree": "Annulé — sans frais. À bientôt.",
+  "msg.alreadyWaiting": "Vous êtes déjà sur la liste d'attente.",
+  "msg.waitJoined": "Vous êtes n°{n} sur la liste d'attente. Nous vous inscrirons automatiquement si une place se libère.",
+  "msg.waitLeft": "Retirée de la liste d'attente.",
+  "msg.checkedIn": "{name} est arrivée",
+  "msg.unchecked": "Arrivée de {name} annulée",
+  "msg.noShow": "{name} marquée absente",
+  "msg.restored": "{name} rétablie",
+  "msg.cancelledLate": "{name} : annulation tardive.",
+  "msg.cancelled": "{name} : annulé.",
+  "msg.promotedToo": " {promoted} a été inscrite depuis la liste d'attente.",
+  "msg.noSpots": "Plus de place. Annulez une réservation d'abord.",
+  "msg.promoted": "{name} inscrite depuis la liste d'attente.",
+  "msg.removedWait": "Retirée de la liste d'attente.",
+  "msg.guestName": "Indiquez le nom de l'invitée.",
+  "msg.classFull": "Le cours est complet.",
+  "msg.guestAdded": "{name} ajoutée comme invitée.",
+  "msg.feeWaived": "Frais offerts",
+  "msg.feeBack": "Frais rétablis",
+  "msg.badCount": "Ce nombre n'est pas possible.",
+  "msg.clockOut": "Fin de service. Reposez-vous bien.",
+  "msg.clockIn": "Début de service.",
+  "msg.saved": "Paramètres enregistrés",
+  "msg.reset": "Données de démo réinitialisées",
+
+  // activity log
+  "log.booked": "{name} a réservé un cours",
+  "log.cancelled": "{name} a annulé une réservation",
+  "log.waitlist": "{name} a rejoint une liste d'attente",
+  "log.staffCancel": "L'équipe a annulé une réservation",
+  "log.promoted": "L'équipe a inscrit une personne depuis la liste d'attente",
+  "log.guest": "Réservation invitée ajoutée",
+
+  // staff
+  "staff.signedIn": "Connecté·e en tant que",
+  "staff.teacher": "Professeur",
+  "staff.desk": "Accueil",
+  "staff.onShift": "En service",
+  "staff.offShift": "Hors service",
+  "staff.clientApp": "Appli clients →",
+  "staff.openClient": "← Ouvrir l'appli clients",
+  "staff.nav.classes": "Cours & listes",
+  "staff.nav.inventory": "Salles & matériel",
+  "staff.nav.hours": "Heures",
+  "staff.nav.settings": "Règles",
+  "staff.myOnly": "Mes cours uniquement",
+  "staff.kpi.booked": "Réservés",
+  "staff.kpi.fill": "Remplissage",
+  "staff.kpi.checked": "Arrivées",
+  "staff.kpi.wait": "En attente",
+  "staff.noClasses": "Aucun cours ce jour-là.",
+  "staff.in": "{n} arrivées",
+  "staff.wait": "+{n} en attente",
+  "staff.late": "Annulations tardives",
+  "staff.lateSub": "Moins de {h} h · frais de {fee} DT",
+  "staff.lateNone": "Aucune — parfait.",
+  "staff.waived": "Offert ✓",
+  "staff.waive": "Offrir les frais",
+  "staff.open": "{n} libres",
+  "staff.lowMats": "Seulement {n} {unit} utilisables en {room} pour {count} élèves — prévoyez du matériel de secours.",
+  "staff.search": "Rechercher",
+  "staff.guest": "INVITÉE",
+  "staff.of": " · de {name}",
+  "staff.undoCheck": "Annuler l'arrivée de {name}",
+  "staff.check": "Marquer {name} arrivée",
+  "staff.more": "Plus d'actions",
+  "staff.undoNoShow": "Annuler l'absence",
+  "staff.noShow": "Absente",
+  "staff.lateCancel": "Annulation tardive",
+  "staff.freeCancel": "Annuler (sans frais)",
+  "staff.waitlist": "Liste d'attente",
+  "staff.autoOn": "Inscription auto activée",
+  "staff.autoOff": "Inscription manuelle",
+  "staff.nobodyWaiting": "Personne en attente.",
+  "staff.promote": "Inscrire",
+  "staff.remove": "Retirer {name}",
+  "staff.guestRes": "Réservation invitée",
+  "staff.guestName": "Nom de l'invitée",
+  "staff.guestOf": "Invitée de (facultatif)",
+  "staff.add": "Ajouter",
+  "staff.cancelledList": "Annulations",
+  "staff.lateWaived": "tardive · offert",
+  "staff.lateFee": "tardive · {fee} DT",
+  "staff.cancelledOne": "annulé",
+  "status.booked": "réservé",
+  "status.checked-in": "arrivée",
+  "status.no-show": "absente",
+  "status.cancelled": "annulé",
+  "status.late-cancel": "annulation tardive",
+  "inv.title": "Salles & matériel",
+  "inv.sub": "Suivez tapis, accessoires, hamacs et bols par salle.",
+  "inv.cap": "Capacité {cap} · pic aujourd'hui {peak}",
+  "inv.usable": "{n} utilisables",
+  "inv.need": " · besoin de {n}",
+  "inv.total": "Total",
+  "inv.repair": "En réparation",
+  "inv.dec": "Diminuer {label}",
+  "inv.inc": "Augmenter {label}",
+  "hours.title": "Heures",
+  "hours.sub": "Pointez à l'arrivée et au départ, et voyez la semaine d'un coup d'œil.",
+  "hours.onSince": "En service depuis",
+  "hours.off": "Hors service",
+  "hours.soFar": "{n} heures jusqu'ici",
+  "hours.clockOut": "Fin de service",
+  "hours.clockIn": "Début de service",
+  "hours.now": "maintenant",
+  "hours.week": "7 derniers jours",
+  "hours.staff": "Équipe",
+  "hours.shifts": "Services",
+  "hours.taught": "Cours donnés",
+  "hours.hours": "Heures",
+  "settings.title": "Règles",
+  "settings.sub": "Appliquées immédiatement dans l'appli clients.",
+  "settings.window": "Délai d'annulation tardive",
+  "settings.windowSub": "Les annulations dans ce délai sont marquées tardives.",
+  "settings.hours": "{n} heures",
+  "settings.fee": "Frais d'annulation tardive",
+  "settings.feeSub": "Facturés sauf s'ils sont offerts par l'équipe.",
+  "settings.auto": "Inscription auto depuis la liste d'attente",
+  "settings.autoSub": "Quand une place se libère, la personne suivante est inscrite automatiquement.",
+  "settings.reset": "Réinitialiser la démo",
+  "settings.resetSub": "Restaure le planning, les listes et l'inventaire d'exemple.",
+  "settings.resetBtn": "Réinitialiser",
+  "settings.confirm": "Réinitialiser toutes les données de démo ?",
+  "settings.activity": "Activité récente",
+
+  // data labels
+  "style.Women's yoga": "Yoga féminin",
+  "style.Anti-stress": "Anti-stress",
+  "style.Back care": "Dos & colonne",
+  "style.Beginner+": "Débutant +",
+  "style.Restorative": "Restoratif",
+  "style.Aerial": "Yoga aérien",
+  "level.All Levels": "Tous niveaux",
+  "level.Beginner": "Débutant",
+  "level.Intermediate": "Intermédiaire",
+  "level.Advanced": "Avancé",
+  "room.studio": "Studio principal",
+  "room.aerial": "Studio aérien",
+  "unit.mat": "tapis",
+  "unit.hammock": "hamacs",
+  "person.team": "Équipe New Moon",
+  "person.desk": "Accueil",
+  "bio.rania": "Professeure certifiée en yoga féminin. Elle guide le cycle équilibre hormonal.",
+  "bio.team": "Cours donné par l'équipe de professeurs du New Moon Yoga Studio.",
+  "bio.desk": "Réservations et gestion du studio.",
+  "desc.hormonal":
+    "Une pratique au féminin pour l'équilibre des hormones, le soulagement des symptômes de la périménopause et de la ménopause, la régulation du cycle et des douleurs menstruelles — guérir le féminin sacré.",
+  "desc.stress": "Mouvements lents guidés par le souffle et relaxation profonde pour relâcher les tensions et apaiser le mental après la journée.",
+  "desc.dos": "Mobilité douce et renforcement pour soulager les douleurs de dos et améliorer la posture.",
+  "desc.debutant": "Apprenez les bases pas à pas — postures, alignement et respiration — puis allez un peu plus loin chaque semaine.",
+  "desc.colonne": "Une pratique dédiée à une colonne saine et souple : étirements, torsions et gainage.",
+  "desc.restoratif": "Postures entièrement soutenues, tenues plusieurs minutes, pour calmer le système nerveux et retrouver de l'énergie.",
+  "desc.air": "Yoga aérien dans un hamac suspendu — décompressez la colonne, gagnez en force et osez les inversions en toute sécurité.",
+  "inv.Yoga mats": "Tapis de yoga",
+  "inv.Cork blocks": "Briques en liège",
+  "inv.Straps": "Sangles",
+  "inv.Bolsters": "Bolsters",
+  "inv.Blankets": "Couvertures",
+  "inv.Singing bowls": "Bols chantants",
+  "inv.Aerial hammocks": "Hamacs aériens",
+  "inv.Rigging sets (carabiners, daisy chains)": "Kits d'accroche (mousquetons, chaînes)",
+  "inv.Crash mats": "Tapis de réception",
+};
+
+type Key = keyof typeof fr;
+
+const en: Record<Key, string> = {
+  "nav.schedule": "Schedule",
+  "nav.bookings": "My classes",
+  "nav.profile": "Profile",
+  "brand.sub": "Yoga Studio",
+  "brand.staff": "Staff Portal",
+  "a11y.profile": "Profile",
+  "a11y.close": "Close",
+  "a11y.moreFilters": "More filters",
+  "a11y.prevMonth": "Previous month",
+  "a11y.nextMonth": "Next month",
+  "lang.switch": "Français",
+
+  "greet.morning": "Good morning",
+  "greet.afternoon": "Good afternoon",
+  "greet.evening": "Good evening",
+  "day.today": "Today",
+  "day.tomorrow": "Tomorrow",
+
+  "schedule.title1": "Find your",
+  "schedule.title2": "practice",
+  "schedule.upNext": "Up next",
+  "schedule.calendar": "Calendar",
+  "schedule.filter": "Filter",
+  "schedule.all": "All",
+  "schedule.emptyTitle": "A quiet day",
+  "schedule.emptyBody": "No classes match. Try another day or clear filters.",
+  "schedule.clear": "Clear filters",
+  "card.booked": "Booked",
+  "card.waitlist": "Waitlist #{n}",
+  "card.inSession": "In session",
+  "card.full": "Full · {n} waiting",
+  "card.left": "{n} left",
+  "card.open": "{n} open",
+
+  "filters.title": "Refine",
+  "filters.reset": "Reset",
+  "filters.time": "Time of day",
+  "filters.anyTime": "Any time",
+  "filters.morning": "Morning",
+  "filters.midday": "Midday",
+  "filters.evening": "Evening",
+  "filters.instructor": "Instructor",
+  "filters.anyone": "Anyone",
+  "filters.level": "Level",
+  "filters.anyLevel": "Any level",
+  "filters.room": "Room",
+  "filters.anyRoom": "Any room",
+  "filters.show": "Show classes",
+
+  "month.classes": "{n} cls",
+  "month.window": "Booking opens {n} days ahead.",
+
+  "class.duration": "Duration",
+  "class.room": "Room",
+  "class.spotsLeft": "Spots left",
+  "class.ofCap": "{n} of {cap}",
+  "class.full": "Full",
+  "class.questions": "Questions? WhatsApp {phone}",
+  "class.bookedTitle": "You're booked",
+  "class.bookedBody": "Arrive 10 minutes early to settle in.",
+  "class.waitPos": "You're #{n} on the waitlist. If a spot opens we'll book you automatically and let you know.",
+  "class.started": "This class has started",
+  "class.lateWarn": "Within {h}h of class — a {fee} DT late-cancel fee applies.",
+  "class.freeCancel": "Free cancellation — your spot goes to the next person waiting.",
+  "class.keep": "Keep my spot",
+  "class.cancelBooking": "Cancel booking",
+  "class.addCal": "Add to calendar",
+  "class.cancel": "Cancel",
+  "class.leaveWait": "Leave waitlist",
+  "class.reserve": "Reserve my spot",
+  "class.joinWait": "Join waitlist · {n} ahead",
+
+  "bookings.title": "My classes",
+  "bookings.sub": "Your bookings and waitlist spots.",
+  "bookings.emptyTitle": "Nothing on the mat yet",
+  "bookings.emptyBody": "Your next class is two taps away.",
+  "bookings.browse": "Browse schedule",
+  "bookings.with": "with {name}",
+  "bookings.late": "Late cancellations",
+  "bookings.waived": "Waived",
+
+  "profile.member": "Member",
+  "profile.plan": "Plan",
+  "profile.since": "Since {date}",
+  "profile.upcoming": "Upcoming",
+  "profile.attended": "Attended",
+  "profile.policies": "Studio policies",
+  "profile.policy1": "Cancel at least {h} hours before class to avoid a {fee} DT late-cancel fee.",
+  "profile.policy2": "Waitlists promote automatically — you'll be booked and notified if a spot opens.",
+  "profile.policy3": "Doors open 15 minutes before class. Mats, blocks and bolsters are provided.",
+  "profile.visit": "Visit & contact",
+  "profile.staff": "Staff portal",
+  "profile.staffSub": "For teachers & front desk",
+  "plan.monthly": "Monthly Pass",
+
+  "msg.started": "This class has already started.",
+  "msg.alreadyBooked": "You're already booked.",
+  "msg.justFull": "This class just filled up — join the waitlist instead.",
+  "msg.booked": "You're in — see you on the mat.",
+  "msg.noBooking": "No booking found.",
+  "msg.cancelLate": "Cancelled. A {fee} DT late-cancel fee applies.",
+  "msg.cancelFree": "Cancelled — no fee. See you soon.",
+  "msg.alreadyWaiting": "You're already on the waitlist.",
+  "msg.waitJoined": "You're #{n} on the waitlist. We'll book you automatically if a spot opens.",
+  "msg.waitLeft": "Removed from the waitlist.",
+  "msg.checkedIn": "{name} checked in",
+  "msg.unchecked": "{name} un-checked",
+  "msg.noShow": "{name} marked no-show",
+  "msg.restored": "{name} restored",
+  "msg.cancelledLate": "{name} late-cancelled.",
+  "msg.cancelled": "{name} cancelled.",
+  "msg.promotedToo": " {promoted} was promoted from the waitlist.",
+  "msg.noSpots": "No open spots. Cancel someone first.",
+  "msg.promoted": "{name} promoted from waitlist.",
+  "msg.removedWait": "Removed from waitlist.",
+  "msg.guestName": "Add the guest's name.",
+  "msg.classFull": "Class is full.",
+  "msg.guestAdded": "{name} added as a guest.",
+  "msg.feeWaived": "Fee waived",
+  "msg.feeBack": "Fee reinstated",
+  "msg.badCount": "That count isn't possible.",
+  "msg.clockOut": "Clocked out. Rest well.",
+  "msg.clockIn": "Clocked in.",
+  "msg.saved": "Settings saved",
+  "msg.reset": "Demo data reset",
+
+  "log.booked": "{name} booked a class",
+  "log.cancelled": "{name} cancelled a booking",
+  "log.waitlist": "{name} joined a waitlist",
+  "log.staffCancel": "Staff cancelled a booking",
+  "log.promoted": "Staff promoted from waitlist",
+  "log.guest": "Guest reservation added",
+
+  "staff.signedIn": "Signed in as",
+  "staff.teacher": "Teacher",
+  "staff.desk": "Front desk",
+  "staff.onShift": "On shift",
+  "staff.offShift": "Off shift",
+  "staff.clientApp": "Client app →",
+  "staff.openClient": "← Open client app",
+  "staff.nav.classes": "Classes & rosters",
+  "staff.nav.inventory": "Rooms & equipment",
+  "staff.nav.hours": "Hours",
+  "staff.nav.settings": "Policies",
+  "staff.myOnly": "My classes only",
+  "staff.kpi.booked": "Booked",
+  "staff.kpi.fill": "Fill rate",
+  "staff.kpi.checked": "Checked in",
+  "staff.kpi.wait": "Waitlisted",
+  "staff.noClasses": "No classes this day.",
+  "staff.in": "{n} in",
+  "staff.wait": "+{n} wait",
+  "staff.late": "Late cancellations",
+  "staff.lateSub": "Within {h}h · {fee} DT fee",
+  "staff.lateNone": "None — lovely.",
+  "staff.waived": "Waived ✓",
+  "staff.waive": "Waive fee",
+  "staff.open": "{n} open",
+  "staff.lowMats": "Only {n} usable {unit} in {room} for {count} students — pull spares.",
+  "staff.search": "Search roster",
+  "staff.guest": "GUEST",
+  "staff.of": " · of {name}",
+  "staff.undoCheck": "Undo check-in for {name}",
+  "staff.check": "Check in {name}",
+  "staff.more": "More actions",
+  "staff.undoNoShow": "Undo no-show",
+  "staff.noShow": "No-show",
+  "staff.lateCancel": "Late cancel",
+  "staff.freeCancel": "Cancel (no fee)",
+  "staff.waitlist": "Waitlist",
+  "staff.autoOn": "Auto-promote on",
+  "staff.autoOff": "Manual promote",
+  "staff.nobodyWaiting": "No one waiting.",
+  "staff.promote": "Promote",
+  "staff.remove": "Remove {name}",
+  "staff.guestRes": "Guest reservation",
+  "staff.guestName": "Guest name",
+  "staff.guestOf": "Guest of (optional)",
+  "staff.add": "Add",
+  "staff.cancelledList": "Cancelled",
+  "staff.lateWaived": "late · waived",
+  "staff.lateFee": "late · {fee} DT",
+  "staff.cancelledOne": "cancelled",
+  "status.booked": "booked",
+  "status.checked-in": "checked in",
+  "status.no-show": "no show",
+  "status.cancelled": "cancelled",
+  "status.late-cancel": "late cancel",
+  "inv.title": "Rooms & equipment",
+  "inv.sub": "Track mats, props, hammocks and instruments per room.",
+  "inv.cap": "Cap. {cap} · peak today {peak}",
+  "inv.usable": "{n} usable",
+  "inv.need": " · need {n}",
+  "inv.total": "Total",
+  "inv.repair": "In repair",
+  "inv.dec": "Decrease {label}",
+  "inv.inc": "Increase {label}",
+  "hours.title": "Hours",
+  "hours.sub": "Clock in, clock out, and see the week at a glance.",
+  "hours.onSince": "On shift since",
+  "hours.off": "Off shift",
+  "hours.soFar": "{n} hours so far",
+  "hours.clockOut": "Clock out",
+  "hours.clockIn": "Clock in",
+  "hours.now": "now",
+  "hours.week": "Last 7 days",
+  "hours.staff": "Staff",
+  "hours.shifts": "Shifts",
+  "hours.taught": "Classes taught",
+  "hours.hours": "Hours",
+  "settings.title": "Policies",
+  "settings.sub": "Applied instantly to the client app.",
+  "settings.window": "Late-cancel window",
+  "settings.windowSub": "Cancellations inside this window are flagged as late.",
+  "settings.hours": "{n} hours",
+  "settings.fee": "Late-cancel fee",
+  "settings.feeSub": "Charged unless waived by staff.",
+  "settings.auto": "Auto-promote waitlist",
+  "settings.autoSub": "When a spot opens, book the next person automatically.",
+  "settings.reset": "Reset demo data",
+  "settings.resetSub": "Restores the sample schedule, rosters and inventory.",
+  "settings.resetBtn": "Reset",
+  "settings.confirm": "Reset all demo data?",
+  "settings.activity": "Recent activity",
+
+  "style.Women's yoga": "Women's yoga",
+  "style.Anti-stress": "Anti-stress",
+  "style.Back care": "Back care",
+  "style.Beginner+": "Beginner+",
+  "style.Restorative": "Restorative",
+  "style.Aerial": "Aerial",
+  "level.All Levels": "All levels",
+  "level.Beginner": "Beginner",
+  "level.Intermediate": "Intermediate",
+  "level.Advanced": "Advanced",
+  "room.studio": "Main Studio",
+  "room.aerial": "Aerial Studio",
+  "unit.mat": "mats",
+  "unit.hammock": "hammocks",
+  "person.team": "New Moon Team",
+  "person.desk": "Front Desk",
+  "bio.rania": "Professeure certifiée en yoga féminin. Guides the hormonal balance series.",
+  "bio.team": "Taught by the New Moon Yoga Studio teaching team.",
+  "bio.desk": "Reservations & studio management.",
+  "desc.hormonal":
+    "A women's practice to balance hormones, ease the symptoms of perimenopause and menopause, regulate the cycle and soothe menstrual pain — healing the sacred feminine.",
+  "desc.stress": "Slow breath-led movement and deep relaxation to release tension and quiet the mind after the day.",
+  "desc.dos": "Gentle mobility and strengthening to relieve back pain and improve posture.",
+  "desc.debutant": "Learn the foundations step by step — postures, alignment and breathing — then go a little further each week.",
+  "desc.colonne": "A practice dedicated to a healthy, supple spine: lengthening, twists and core support.",
+  "desc.restoratif": "Fully supported postures held for several minutes to calm the nervous system and restore energy.",
+  "desc.air": "Aerial yoga in a suspended hammock — decompress the spine, build strength and play with inversions safely.",
+  "inv.Yoga mats": "Yoga mats",
+  "inv.Cork blocks": "Cork blocks",
+  "inv.Straps": "Straps",
+  "inv.Bolsters": "Bolsters",
+  "inv.Blankets": "Blankets",
+  "inv.Singing bowls": "Singing bowls",
+  "inv.Aerial hammocks": "Aerial hammocks",
+  "inv.Rigging sets (carabiners, daisy chains)": "Rigging sets (carabiners, daisy chains)",
+  "inv.Crash mats": "Crash mats",
+};
+
+const DICTS: Record<Lang, Record<string, string>> = { fr, en };
+export const LOCALES: Record<Lang, string> = { fr: "fr-FR", en: "en-GB" };
+
+// ——— language preference (per device) ———
+
+const KEY = "newmoon-lang";
+const listeners = new Set<() => void>();
+let current: Lang | null = null;
+
+function read(): Lang {
+  if (current) return current;
+  try {
+    const v = localStorage.getItem(KEY);
+    current = v === "en" || v === "fr" ? v : "fr";
+  } catch {
+    current = "fr";
+  }
+  document.documentElement.lang = current;
+  return current;
+}
+
+export function setLang(lang: Lang) {
+  current = lang;
+  try {
+    localStorage.setItem(KEY, lang);
+  } catch {}
+  document.documentElement.lang = lang;
+  listeners.forEach((l) => l());
+}
+
+function subscribe(l: () => void) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
+export function translate(lang: Lang, key: string, vars?: Vars): string {
+  let s = DICTS[lang][key] ?? DICTS.fr[key] ?? key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
+  return s;
+}
+
+export type T = ReturnType<typeof useT>;
+
+export function useT() {
+  const lang = useSyncExternalStore(subscribe, read, () => "fr" as Lang);
+  const t = (key: Key | string, vars?: Vars) => translate(lang, key, vars);
+  const locale = LOCALES[lang];
+  return {
+    lang,
+    locale,
+    setLang,
+    t,
+    style: (s: Style) => t(`style.${s}`),
+    level: (l: Level) => t(`level.${l}`),
+    room: (r: Room) => t(`room.${r.id}`),
+    unit: (r: Room) => t(`unit.${r.unit}`),
+    person: (p: Instructor) => (p.id === "team" || p.id === "desk" ? t(`person.${p.id}`) : p.name),
+    bio: (p: Instructor) => t(`bio.${p.id}`),
+    desc: (s: Session) => t(`desc.${s.description}`),
+    item: (i: InventoryItem) => t(`inv.${i.name}`),
+    // translate a store Result
+    msg: (r: { message: string; vars?: Vars }) =>
+      r.message ? t(r.message, r.vars) + (r.vars?.promoted ? t("msg.promotedToo", { promoted: r.vars.promoted }) : "") : "",
+    greeting: () => {
+      const h = new Date().getHours();
+      return t(h < 12 ? "greet.morning" : h < 18 ? "greet.afternoon" : "greet.evening");
+    },
+    dayLong: (d: Date | string) => cap(new Date(d).toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric" })),
+    dayShort: (d: Date | string) => new Date(d).toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" }),
+    relDay: (d: Date | string) => {
+      const date = new Date(d);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diff = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() - today.getTime()) / 864e5);
+      if (diff === 0) return t("day.today");
+      if (diff === 1) return t("day.tomorrow");
+      return date.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" });
+    },
+  };
+}
+
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export function LangToggle({ className = "" }: { className?: string }) {
+  const { lang, setLang } = useT();
+  return (
+    <div className={`flex rounded-full border border-stone-deep/70 bg-linen p-0.5 text-[11px] tracking-wide ${className}`} role="group" aria-label="Language / Langue">
+      {LANGS.map((l) => (
+        <button
+          key={l}
+          onClick={() => setLang(l)}
+          aria-pressed={lang === l}
+          className={`rounded-full px-2.5 py-1 uppercase transition ${lang === l ? "bg-plum text-linen" : "text-muted"}`}
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LEVELS, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
-import { addDays, dayKey, formatDayLong, formatTime, fromDayKey, greeting, relativeDay, startOfDay } from "@/lib/date";
-import { isPast, myBooking, myWaitlistPosition, spotsLeft, useStudio } from "@/lib/store";
+import { addDays, dayKey, formatTime, fromDayKey, startOfDay } from "@/lib/date";
+import { LangToggle, useT } from "@/lib/i18n";
+import { isPast, myBooking, myWaitlistPosition, spotsLeft, useStudio, type Result } from "@/lib/store";
 import type { Level, Session, Style, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Chip, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
 import { ClassSheet } from "./ClassSheet";
@@ -25,6 +26,9 @@ export default function ClientApp() {
   const [tab, setTab] = useState<Tab>("schedule");
   const [openId, setOpenId] = useState<string | null>(null);
   const { toast, show } = useToast();
+  const i = useT();
+  const { t } = i;
+  const notify = (r: Result) => show(i.msg(r), r.ok ? "ok" : "warn");
 
   if (!studio) return <Loading />;
   const open = studio.sessions.find((s) => s.id === openId) ?? null;
@@ -32,10 +36,13 @@ export default function ClientApp() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-[460px] flex-col bg-sand sm:my-0 sm:shadow-lift">
       <header className="sticky top-0 z-30 flex items-center justify-between bg-sand/90 px-5 pt-[max(env(safe-area-inset-top),14px)] pb-3 backdrop-blur-md">
-        <Wordmark />
-        <button onClick={() => setTab("profile")} aria-label="Profile">
-          <Avatar name={studio.me.name} size={36} tone="#d9c6b0" />
-        </button>
+        <Wordmark sub={t("brand.sub")} />
+        <div className="flex items-center gap-2.5">
+          <LangToggle />
+          <button onClick={() => setTab("profile")} aria-label={t("a11y.profile")}>
+            <Avatar name={studio.me.name} size={36} tone="#d9c6b0" />
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 pb-28">
@@ -48,9 +55,9 @@ export default function ClientApp() {
         <ul className="flex justify-around">
           {(
             [
-              ["schedule", "calendar", "Schedule"],
-              ["bookings", "list", "My classes"],
-              ["profile", "user", "Profile"],
+              ["schedule", "calendar", t("nav.schedule")],
+              ["bookings", "list", t("nav.bookings")],
+              ["profile", "user", t("nav.profile")],
             ] as const
           ).map(([key, icon, label]) => (
             <li key={key}>
@@ -68,7 +75,7 @@ export default function ClientApp() {
         </ul>
       </nav>
 
-      <ClassSheet studio={studio} session={open} onClose={() => setOpenId(null)} notify={show} />
+      <ClassSheet studio={studio} session={open} onClose={() => setOpenId(null)} notify={notify} />
       <Toast toast={toast} />
     </div>
   );
@@ -84,6 +91,8 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
   const [filterOpen, setFilterOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
+  const i = useT();
+  const { t } = i;
 
   useEffect(() => {
     stripRef.current?.querySelector(`[data-day="${selected}"]`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
@@ -119,9 +128,9 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
   return (
     <div className="animate-fade">
       <section className="px-5 pt-3">
-        <p className="text-[13px] text-muted">{greeting()}, {studio.me.name.split(" ")[0]}</p>
+        <p className="text-[13px] text-muted">{i.greeting()}, {studio.me.name.split(" ")[0]}</p>
         <h1 className="mt-1 font-display text-[38px] leading-[1.02] font-medium">
-          Find your <em className="text-plum">practice</em>
+          {t("schedule.title1")} <em className="text-plum">{t("schedule.title2")}</em>
         </h1>
       </section>
 
@@ -131,10 +140,10 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
           className="mx-5 mt-5 flex w-[calc(100%-2.5rem)] items-center gap-4 rounded-3xl bg-plum px-5 py-4 text-left text-linen shadow-soft"
         >
           <div className="flex-1">
-            <div className="text-[10.5px] uppercase tracking-[0.25em] opacity-70">Up next</div>
+            <div className="text-[10.5px] uppercase tracking-[0.25em] opacity-70">{t("schedule.upNext")}</div>
             <div className="mt-1 font-display text-[22px] leading-tight">{nextUp.title}</div>
             <div className="text-[12.5px] opacity-80">
-              {relativeDay(nextUp.start)} · {formatTime(nextUp.start)}
+              {i.relDay(nextUp.start)} · {formatTime(nextUp.start)}
             </div>
           </div>
           <Icon name="arrow" />
@@ -144,9 +153,9 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
       {/* date strip */}
       <section className="mt-6">
         <div className="flex items-center justify-between px-5">
-          <h2 className="text-[13px] font-medium tracking-wide">{formatDayLong(fromDayKey(selected))}</h2>
+          <h2 className="text-[13px] font-medium tracking-wide">{i.dayLong(fromDayKey(selected))}</h2>
           <button onClick={() => setMonthOpen(true)} className="flex items-center gap-1.5 text-[12.5px] text-plum">
-            <Icon name="calendar" size={16} /> Calendar
+            <Icon name="calendar" size={16} /> {t("schedule.calendar")}
           </button>
         </div>
         <div ref={stripRef} className="no-scrollbar mt-3 flex snap-x gap-2 overflow-x-auto px-5 pb-1">
@@ -164,7 +173,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
                 }`}
               >
                 <span className={`text-[10.5px] uppercase tracking-[0.15em] ${active ? "opacity-70" : "text-muted"}`}>
-                  {d.toLocaleDateString([], { weekday: "short" })}
+                  {d.toLocaleDateString(i.locale, { weekday: "short" }).replace(".", "")}
                 </span>
                 <span className="mt-0.5 font-display text-[22px] leading-none">{d.getDate()}</span>
                 <span className="mt-1.5 flex gap-0.5">
@@ -183,16 +192,16 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
         <button
           onClick={() => setFilterOpen(true)}
           className="relative flex shrink-0 items-center gap-1.5 rounded-full border border-stone-deep/70 bg-linen px-3.5 py-2 text-[13px]"
-          aria-label="More filters"
+          aria-label={t("a11y.moreFilters")}
         >
-          <Icon name="filter" size={16} /> Filter
+          <Icon name="filter" size={16} /> {t("schedule.filter")}
           {extraFilters > 0 && (
             <span className="ml-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-clay px-1 text-[10px] text-linen">{extraFilters}</span>
           )}
         </button>
         {(["All", ...STYLES] as const).map((s) => (
           <Chip key={s} active={filters.style === s} onClick={() => setFilters({ ...filters, style: s })}>
-            {s}
+            {s === "All" ? t("schedule.all") : i.style(s)}
           </Chip>
         ))}
       </section>
@@ -201,11 +210,11 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
       <section className="mt-5 space-y-3 px-5">
         {list.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-stone-deep px-6 py-12 text-center">
-            <p className="font-display text-[22px]">A quiet day</p>
-            <p className="mt-1 text-[13px] text-muted">No classes match. Try another day or clear filters.</p>
+            <p className="font-display text-[22px]">{t("schedule.emptyTitle")}</p>
+            <p className="mt-1 text-[13px] text-muted">{t("schedule.emptyBody")}</p>
             {(filters.style !== "All" || extraFilters > 0) && (
               <button onClick={() => setFilters(NO_FILTERS)} className="mt-4 text-[13px] text-plum underline underline-offset-4">
-                Clear filters
+                {t("schedule.clear")}
               </button>
             )}
           </div>
@@ -244,6 +253,7 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
   const time = formatTime(s.start);
   const meta = STYLE_META[s.style];
   const started = isPast(s);
+  const i = useT();
 
   return (
     <button
@@ -256,13 +266,13 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em]" style={{ color: meta.hue }}>
-          {s.style} <span className="text-muted">· {s.durationMin}m</span>
+          {i.style(s.style)} <span className="text-muted">· {s.durationMin} min</span>
         </div>
         <div className="mt-0.5 truncate font-display text-[20px] leading-tight font-medium">{s.title}</div>
         <div className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
           <Avatar person={teacher} size={18} />
           <span className="truncate">
-            {teacher.name} · {room.name}
+            {i.person(teacher)} · {i.room(room)}
           </span>
         </div>
         <div className="mt-3 flex items-center gap-3">
@@ -277,17 +287,18 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
 }
 
 function Status({ mine, wait, left, waitCount, started }: { mine: boolean; wait: number | null; left: number; waitCount: number; started: boolean }) {
+  const { t } = useT();
   if (mine)
     return (
       <span className="flex items-center gap-1 rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">
-        <Icon name="check" size={13} /> Booked
+        <Icon name="check" size={13} /> {t("card.booked")}
       </span>
     );
-  if (wait) return <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">Waitlist #{wait}</span>;
-  if (started) return <span className="text-[11.5px] text-muted">In session</span>;
-  if (left === 0) return <span className="text-[11.5px] text-rose">Full · {waitCount} waiting</span>;
-  if (left <= 3) return <span className="text-[11.5px] text-clay">{left} left</span>;
-  return <span className="text-[11.5px] text-muted">{left} open</span>;
+  if (wait) return <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">{t("card.waitlist", { n: wait })}</span>;
+  if (started) return <span className="text-[11.5px] text-muted">{t("card.inSession")}</span>;
+  if (left === 0) return <span className="text-[11.5px] text-rose">{t("card.full", { n: waitCount })}</span>;
+  if (left <= 3) return <span className="text-[11.5px] text-clay">{t("card.left", { n: left })}</span>;
+  return <span className="text-[11.5px] text-muted">{t("card.open", { n: left })}</span>;
 }
 
 function FilterSheet({
@@ -303,57 +314,59 @@ function FilterSheet({
   filters: Filters;
   setFilters: (f: Filters) => void;
 }) {
-  const teachers = studio.instructors.filter((i) => i.role === "teacher");
+  const teachers = studio.instructors.filter((p) => p.role === "teacher");
+  const i = useT();
+  const { t } = i;
   return (
-    <Sheet open={open} onClose={onClose} label="Filters">
+    <Sheet open={open} onClose={onClose} label={t("filters.title")}>
       <div className="space-y-6 px-6 pb-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-[28px]">Refine</h2>
+          <h2 className="font-display text-[28px]">{t("filters.title")}</h2>
           <button onClick={() => setFilters({ ...NO_FILTERS, style: filters.style })} className="text-[13px] text-muted underline underline-offset-4">
-            Reset
+            {t("filters.reset")}
           </button>
         </div>
-        <Group label="Time of day">
-          {(["any", "morning", "midday", "evening"] as const).map((t) => (
-            <Chip key={t} active={filters.time === t} onClick={() => setFilters({ ...filters, time: t })}>
-              {t === "any" ? "Any time" : t[0].toUpperCase() + t.slice(1)}
+        <Group label={t("filters.time")}>
+          {(["any", "morning", "midday", "evening"] as const).map((tod) => (
+            <Chip key={tod} active={filters.time === tod} onClick={() => setFilters({ ...filters, time: tod })}>
+              {tod === "any" ? t("filters.anyTime") : t(`filters.${tod}`)}
             </Chip>
           ))}
         </Group>
-        <Group label="Instructor">
+        <Group label={t("filters.instructor")}>
           <Chip active={filters.instructor === "any"} onClick={() => setFilters({ ...filters, instructor: "any" })}>
-            Anyone
+            {t("filters.anyone")}
           </Chip>
-          {teachers.map((t) => (
-            <Chip key={t.id} active={filters.instructor === t.id} onClick={() => setFilters({ ...filters, instructor: t.id })}>
-              {t.name}
+          {teachers.map((p) => (
+            <Chip key={p.id} active={filters.instructor === p.id} onClick={() => setFilters({ ...filters, instructor: p.id })}>
+              {i.person(p)}
             </Chip>
           ))}
         </Group>
-        <Group label="Level">
+        <Group label={t("filters.level")}>
           <Chip active={filters.level === "any"} onClick={() => setFilters({ ...filters, level: "any" })}>
-            Any level
+            {t("filters.anyLevel")}
           </Chip>
           {LEVELS.map((l) => (
             <Chip key={l} active={filters.level === l} onClick={() => setFilters({ ...filters, level: l })}>
-              {l}
+              {i.level(l)}
             </Chip>
           ))}
         </Group>
-        <Group label="Room">
+        <Group label={t("filters.room")}>
           <Chip active={filters.room === "any"} onClick={() => setFilters({ ...filters, room: "any" })}>
-            Any room
+            {t("filters.anyRoom")}
           </Chip>
           {studio.rooms.map((r) => (
             <Chip key={r.id} active={filters.room === r.id} onClick={() => setFilters({ ...filters, room: r.id })}>
-              {r.name}
+              {i.room(r)}
             </Chip>
           ))}
         </Group>
       </div>
       <div className="sticky bottom-0 border-t border-stone/70 bg-linen/95 px-6 pt-4 pb-safe">
         <button onClick={onClose} className="w-full rounded-full bg-ink py-4 text-[15px] text-linen">
-          Show classes
+          {t("filters.show")}
         </button>
       </div>
     </Sheet>
@@ -389,26 +402,31 @@ function MonthSheet({
   const month = new Date(base.getFullYear(), base.getMonth() + offset, 1);
   const lastAvail = fromDayKey(available[available.length - 1]);
   const canNext = new Date(month.getFullYear(), month.getMonth() + 1, 1) <= lastAvail;
-  const lead = month.getDay();
   const daysIn = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  const cells = [...Array(lead).fill(null), ...Array.from({ length: daysIn }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))];
   const availSet = new Set(available);
+  const i = useT();
+  const { t } = i;
+  // Monday-first in French, Sunday-first in English
+  const weekStart = i.lang === "fr" ? 1 : 0;
+  const lead = (month.getDay() - weekStart + 7) % 7;
+  const cells = [...Array(lead).fill(null), ...Array.from({ length: daysIn }, (_, k) => new Date(month.getFullYear(), month.getMonth(), k + 1))];
+  const weekdays = Array.from({ length: 7 }, (_, k) => new Date(2024, 0, 7 + weekStart + k).toLocaleDateString(i.locale, { weekday: "narrow" }));
 
   return (
-    <Sheet open={open} onClose={onClose} label="Calendar">
+    <Sheet open={open} onClose={onClose} label={t("schedule.calendar")}>
       <div className="px-6 pb-8">
         <div className="flex items-center justify-between">
-          <button disabled={offset === 0} onClick={() => setOffset(offset - 1)} className="rounded-full p-2 disabled:opacity-25" aria-label="Previous month">
+          <button disabled={offset === 0} onClick={() => setOffset(offset - 1)} className="rounded-full p-2 disabled:opacity-25" aria-label={t("a11y.prevMonth")}>
             <Icon name="chevronL" />
           </button>
-          <h2 className="font-display text-[26px]">{month.toLocaleDateString([], { month: "long", year: "numeric" })}</h2>
-          <button disabled={!canNext} onClick={() => setOffset(offset + 1)} className="rounded-full p-2 disabled:opacity-25" aria-label="Next month">
+          <h2 className="font-display text-[26px]">{month.toLocaleDateString(i.locale, { month: "long", year: "numeric" })}</h2>
+          <button disabled={!canNext} onClick={() => setOffset(offset + 1)} className="rounded-full p-2 disabled:opacity-25" aria-label={t("a11y.nextMonth")}>
             <Icon name="chevronR" />
           </button>
         </div>
         <div className="mt-4 grid grid-cols-7 text-center text-[10.5px] uppercase tracking-[0.15em] text-muted">
-          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-            <div key={i} className="py-2">{d}</div>
+          {weekdays.map((d, k) => (
+            <div key={k} className="py-2">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -428,12 +446,12 @@ function MonthSheet({
                 }`}
               >
                 {d.getDate()}
-                {ok && <span className={`mt-0.5 text-[9px] ${sel ? "text-linen/70" : "text-plum"}`}>{n} cls</span>}
+                {ok && <span className={`mt-0.5 text-[9px] ${sel ? "text-linen/70" : "text-plum"}`}>{t("month.classes", { n })}</span>}
               </button>
             );
           })}
         </div>
-        <p className="mt-5 text-center text-[12px] text-muted">Booking opens {SCHEDULE_DAYS} days ahead.</p>
+        <p className="mt-5 text-center text-[12px] text-muted">{t("month.window", { n: SCHEDULE_DAYS })}</p>
       </div>
     </Sheet>
   );
@@ -448,41 +466,43 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
   const lateCancels = studio.sessions.flatMap((s) =>
     s.bookings.filter((b) => b.memberId === studio.me.id && b.status === "late-cancel").map((b) => ({ s, b })),
   );
+  const i = useT();
+  const { t } = i;
 
   return (
     <div className="animate-fade px-5 pt-3">
-      <h1 className="font-display text-[36px] leading-tight font-medium">My classes</h1>
-      <p className="text-[13px] text-muted">Your bookings and waitlist spots.</p>
+      <h1 className="font-display text-[36px] leading-tight font-medium">{t("bookings.title")}</h1>
+      <p className="text-[13px] text-muted">{t("bookings.sub")}</p>
 
       <div className="mt-6 space-y-3">
         {upcoming.length === 0 && (
           <div className="rounded-3xl border border-dashed border-stone-deep px-6 py-12 text-center">
-            <p className="font-display text-[22px]">Nothing on the mat yet</p>
-            <p className="mt-1 text-[13px] text-muted">Your next class is two taps away.</p>
+            <p className="font-display text-[22px]">{t("bookings.emptyTitle")}</p>
+            <p className="mt-1 text-[13px] text-muted">{t("bookings.emptyBody")}</p>
             <button onClick={goSchedule} className="mt-5 rounded-full bg-plum px-6 py-3 text-[14px] text-linen">
-              Browse schedule
+              {t("bookings.browse")}
             </button>
           </div>
         )}
         {upcoming.map((s) => {
           const b = myBooking(s, studio.me.id);
           const w = myWaitlistPosition(s, studio.me.id);
-          const teacher = studio.instructors.find((i) => i.id === s.instructorId)!;
+          const teacher = studio.instructors.find((p) => p.id === s.instructorId)!;
           const time = formatTime(s.start);
           return (
             <button key={s.id} onClick={() => onOpen(s.id)} className="flex w-full items-center gap-4 rounded-3xl bg-linen p-4 text-left shadow-soft">
               <div className="w-16 text-center">
-                <div className="text-[10.5px] uppercase tracking-[0.15em] text-muted">{relativeDay(s.start)}</div>
+                <div className="text-[10.5px] uppercase tracking-[0.15em] text-muted">{i.relDay(s.start)}</div>
                 <div className="font-display text-[22px] leading-tight">{time}</div>
               </div>
               <div className="min-w-0 flex-1 border-l border-stone pl-4">
                 <div className="truncate font-display text-[19px] font-medium">{s.title}</div>
-                <div className="text-[12.5px] text-muted">with {teacher.name}</div>
+                <div className="text-[12.5px] text-muted">{t("bookings.with", { name: i.person(teacher) })}</div>
                 <div className="mt-2">
                   {b ? (
-                    <span className="rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">Booked</span>
+                    <span className="rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">{t("card.booked")}</span>
                   ) : (
-                    <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">Waitlist #{w}</span>
+                    <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">{t("card.waitlist", { n: w ?? "" })}</span>
                   )}
                 </div>
               </div>
@@ -494,14 +514,14 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
 
       {lateCancels.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-[11px] uppercase tracking-[0.22em] text-muted">Late cancellations</h2>
+          <h2 className="text-[11px] uppercase tracking-[0.22em] text-muted">{t("bookings.late")}</h2>
           <ul className="mt-3 divide-y divide-stone rounded-3xl bg-linen px-4">
             {lateCancels.map(({ s, b }) => (
               <li key={b.id} className="flex items-center justify-between py-3 text-[13.5px]">
                 <span>
-                  {s.title} · {relativeDay(s.start)}
+                  {s.title} · {i.relDay(s.start)}
                 </span>
-                <span className={b.feeWaived ? "text-plum" : "text-rose"}>{b.feeWaived ? "Waived" : `${studio.settings.lateCancelFee} DT`}</span>
+                <span className={b.feeWaived ? "text-plum" : "text-rose"}>{b.feeWaived ? t("bookings.waived") : `${studio.settings.lateCancelFee} DT`}</span>
               </li>
             ))}
           </ul>
@@ -516,40 +536,42 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
 function Profile({ studio }: { studio: StudioState }) {
   const attended = studio.sessions.filter((s) => s.bookings.some((b) => b.memberId === studio.me.id && b.status === "checked-in")).length;
   const booked = studio.sessions.filter((s) => myBooking(s, studio.me.id) && !isPast(s)).length;
-  const since = new Date(studio.me.since).toLocaleDateString([], { month: "long", year: "numeric" });
+  const i = useT();
+  const { t } = i;
+  const since = new Date(studio.me.since).toLocaleDateString(i.locale, { month: "long", year: "numeric" });
 
   return (
     <div className="animate-fade px-5 pt-3">
       <div className="relative overflow-hidden rounded-[28px] bg-ink p-6 text-linen shadow-lift">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-512.png" alt="" className="absolute -top-6 -right-6 h-36 w-36 rounded-full opacity-90" />
-        <div className="text-[10.5px] uppercase tracking-[0.3em] opacity-60">Member</div>
+        <div className="text-[10.5px] uppercase tracking-[0.3em] opacity-60">{t("profile.member")}</div>
         <div className="mt-2 font-display text-[30px]">{studio.me.name}</div>
         <div className="mt-6 flex items-end justify-between">
           <div>
-            <div className="text-[11px] opacity-60">Plan</div>
-            <div className="text-[15px]">{studio.me.plan}</div>
+            <div className="text-[11px] opacity-60">{t("profile.plan")}</div>
+            <div className="text-[15px]">{t(`plan.${studio.me.plan}`)}</div>
           </div>
-          <div className="text-right text-[11px] opacity-60">Since {since}</div>
+          <div className="text-right text-[11px] opacity-60">{t("profile.since", { date: since })}</div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Stat label="Upcoming" value={booked} />
-        <Stat label="Attended" value={attended} />
+        <Stat label={t("profile.upcoming")} value={booked} />
+        <Stat label={t("profile.attended")} value={attended} />
       </div>
 
       <div className="mt-6 rounded-3xl bg-linen p-5 text-[13.5px] leading-relaxed text-ink/80">
-        <h3 className="mb-2 font-display text-[20px] text-ink">Studio policies</h3>
+        <h3 className="mb-2 font-display text-[20px] text-ink">{t("profile.policies")}</h3>
         <ul className="space-y-2">
-          <li>• Cancel at least {studio.settings.lateCancelHours} hours before class to avoid a {studio.settings.lateCancelFee} DT late-cancel fee.</li>
-          <li>• Waitlists promote automatically — you&apos;ll be booked and notified if a spot opens.</li>
-          <li>• Doors open 15 minutes before class. Mats, blocks and bolsters are provided.</li>
+          <li>• {t("profile.policy1", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })}</li>
+          <li>• {t("profile.policy2")}</li>
+          <li>• {t("profile.policy3")}</li>
         </ul>
       </div>
 
       <div className="mt-6 rounded-3xl bg-linen p-5">
-        <h3 className="font-display text-[20px]">Visit & contact</h3>
+        <h3 className="font-display text-[20px]">{t("profile.visit")}</h3>
         <p className="mt-1 flex items-center gap-1.5 text-[13.5px] text-muted">
           <Icon name="pin" size={16} /> {STUDIO.location}
         </p>
@@ -565,8 +587,8 @@ function Profile({ studio }: { studio: StudioState }) {
 
       <Link href="/staff" className="mt-6 flex items-center justify-between rounded-3xl border border-stone-deep/60 px-5 py-4 text-[14px]">
         <span>
-          <span className="block">Staff portal</span>
-          <span className="text-[12px] text-muted">For teachers & front desk</span>
+          <span className="block">{t("profile.staff")}</span>
+          <span className="text-[12px] text-muted">{t("profile.staffSub")}</span>
         </span>
         <Icon name="arrow" />
       </Link>

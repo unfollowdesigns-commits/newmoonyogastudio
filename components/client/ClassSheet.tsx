@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { STUDIO, STYLE_META } from "@/lib/seed";
-import { endOf, formatDayLong, formatTime, hoursUntil } from "@/lib/date";
+import { endOf, formatTime, hoursUntil } from "@/lib/date";
+import { useT } from "@/lib/i18n";
 import {
   book,
   cancelMine,
@@ -12,6 +13,7 @@ import {
   myBooking,
   myWaitlistPosition,
   spotsLeft,
+  type Result,
 } from "@/lib/store";
 import type { Session, StudioState } from "@/lib/types";
 import { Avatar, Icon, Sheet } from "../ui";
@@ -25,7 +27,7 @@ export function ClassSheet({
   studio: StudioState;
   session: Session | null;
   onClose: () => void;
-  notify: (text: string, tone?: "ok" | "warn") => void;
+  notify: (r: Result) => void;
 }) {
   return (
     <Sheet open={!!session} onClose={onClose} label={session?.title ?? "Class"}>
@@ -34,7 +36,9 @@ export function ClassSheet({
   );
 }
 
-function Body({ studio, session, notify }: { studio: StudioState; session: Session; notify: (t: string, tone?: "ok" | "warn") => void }) {
+function Body({ studio, session, notify }: { studio: StudioState; session: Session; notify: (r: Result) => void }) {
+  const i = useT();
+  const { t } = i;
   const meta = STYLE_META[session.style];
   const teacher = studio.instructors.find((i) => i.id === session.instructorId)!;
   const room = studio.rooms.find((r) => r.id === session.roomId)!;
@@ -45,7 +49,7 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
   const past = isPast(session);
   const late = hoursUntil(session.start) < studio.settings.lateCancelHours;
 
-  const act = (r: { ok: boolean; message: string }) => notify(r.message, r.ok ? "ok" : "warn");
+  const act = notify;
 
   return (
     <div className="pb-safe">
@@ -53,34 +57,34 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
       <div className="mx-5 overflow-hidden rounded-3xl px-6 pt-6 pb-7" style={{ background: meta.soft }}>
         <div className="flex items-center justify-between">
           <span className="rounded-full bg-linen/70 px-3 py-1 text-[11px] uppercase tracking-[0.2em]" style={{ color: meta.hue }}>
-            {session.style}
+            {i.style(session.style)}
           </span>
-          <span className="text-[12px] text-ink/60">{session.level}</span>
+          <span className="text-[12px] text-ink/60">{i.level(session.level)}</span>
         </div>
         <h2 className="mt-5 font-display text-[34px] leading-[1.05] font-medium">{session.title}</h2>
         <p className="mt-2 text-[14px] text-ink/70">
-          {formatDayLong(session.start)} · {formatTime(session.start)}–{formatTime(endOf(session.start, session.durationMin))}
+          {i.dayLong(session.start)} · {formatTime(session.start)}–{formatTime(endOf(session.start, session.durationMin))}
         </p>
       </div>
 
       <div className="space-y-6 px-6 pt-6">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <Fact label="Duration" value={`${session.durationMin} min`} />
-          <Fact label="Room" value={room.name} />
-          <Fact label="Spots left" value={left > 0 ? `${left} of ${session.capacity}` : "Full"} warn={!mine && left === 0} />
+          <Fact label={t("class.duration")} value={`${session.durationMin} min`} />
+          <Fact label={t("class.room")} value={i.room(room)} />
+          <Fact label={t("class.spotsLeft")} value={left > 0 ? t("class.ofCap", { n: left, cap: session.capacity }) : t("class.full")} warn={!mine && left === 0} />
         </div>
 
         <div className="flex items-start gap-3">
           <Avatar person={teacher} size={46} />
           <div>
-            <div className="text-[15px] font-medium">{teacher.name}</div>
-            <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{teacher.bio}</p>
+            <div className="text-[15px] font-medium">{i.person(teacher)}</div>
+            <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{i.bio(teacher)}</p>
           </div>
         </div>
 
-        <p className="text-[14.5px] leading-relaxed text-ink/80">{session.description}</p>
+        <p className="text-[14.5px] leading-relaxed text-ink/80">{i.desc(session)}</p>
         <a href={STUDIO.whatsapp} target="_blank" rel="noreferrer" className="inline-block text-[13px] text-plum underline underline-offset-4">
-          Questions? WhatsApp {STUDIO.phoneDisplay}
+          {t("class.questions", { phone: STUDIO.phoneDisplay })}
         </a>
 
         {mine && (
@@ -89,15 +93,15 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
               <Icon name="check" size={18} />
             </span>
             <div className="text-[14px]">
-              <div className="font-medium">You&apos;re booked</div>
-              <div className="text-[12.5px] opacity-80">Arrive 10 minutes early to settle in.</div>
+              <div className="font-medium">{t("class.bookedTitle")}</div>
+              <div className="text-[12.5px] opacity-80">{t("class.bookedBody")}</div>
             </div>
           </div>
         )}
 
         {waitPos && (
           <div className="rounded-2xl bg-clay-soft px-4 py-3.5 text-[14px] text-ink/80">
-            You&apos;re <b className="font-medium">#{waitPos}</b> on the waitlist. If a spot opens we&apos;ll book you automatically and let you know.
+            {t("class.waitPos", { n: waitPos })}
           </div>
         )}
       </div>
@@ -106,19 +110,19 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
       <div className="sticky bottom-0 mt-6 border-t border-stone/70 bg-linen/95 px-6 pt-4 pb-safe backdrop-blur">
         {past ? (
           <button disabled className="w-full rounded-full bg-stone py-4 text-[15px] text-muted">
-            This class has started
+            {t("class.started")}
           </button>
         ) : mine ? (
           confirmCancel ? (
             <div className="space-y-3">
               <p className={`text-center text-[13px] ${late ? "text-rose" : "text-muted"}`}>
                 {late
-                  ? `Within ${studio.settings.lateCancelHours}h of class — a ${studio.settings.lateCancelFee} DT late-cancel fee applies.`
-                  : "Free cancellation — your spot goes to the next person waiting."}
+                  ? t("class.lateWarn", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })
+                  : t("class.freeCancel")}
               </p>
               <div className="flex gap-3">
                 <button className="flex-1 rounded-full border border-stone-deep py-3.5 text-[14px]" onClick={() => setConfirmCancel(false)}>
-                  Keep my spot
+                  {t("class.keep")}
                 </button>
                 <button
                   className="flex-1 rounded-full bg-rose py-3.5 text-[14px] text-linen"
@@ -127,7 +131,7 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
                     setConfirmCancel(false);
                   }}
                 >
-                  Cancel booking
+                  {t("class.cancelBooking")}
                 </button>
               </div>
             </div>
@@ -135,32 +139,32 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
             <div className="flex gap-3">
               <button
                 className="flex flex-1 items-center justify-center gap-2 rounded-full border border-stone-deep py-3.5 text-[14px]"
-                onClick={() => downloadIcs(session, studio.rooms.find((r) => r.id === session.roomId)!.name)}
+                onClick={() => downloadIcs(session, i.room(room))}
               >
-                <Icon name="calendar" size={17} /> Add to calendar
+                <Icon name="calendar" size={17} /> {t("class.addCal")}
               </button>
               <button className="rounded-full px-5 py-3.5 text-[14px] text-rose" onClick={() => setConfirmCancel(true)}>
-                Cancel
+                {t("class.cancel")}
               </button>
             </div>
           )
         ) : waitPos ? (
           <button className="w-full rounded-full border border-stone-deep py-4 text-[15px]" onClick={() => act(leaveWaitlist(session.id))}>
-            Leave waitlist
+            {t("class.leaveWait")}
           </button>
         ) : left > 0 ? (
           <button
             className="w-full rounded-full bg-plum py-4 text-[15px] tracking-wide text-linen shadow-soft transition active:scale-[0.98]"
             onClick={() => act(book(session.id))}
           >
-            Reserve my spot
+            {t("class.reserve")}
           </button>
         ) : (
           <button
             className="w-full rounded-full bg-clay py-4 text-[15px] tracking-wide text-linen transition active:scale-[0.98]"
             onClick={() => act(joinWaitlist(session.id))}
           >
-            Join waitlist · {session.waitlist.length} ahead
+            {t("class.joinWait", { n: session.waitlist.length })}
           </button>
         )}
       </div>

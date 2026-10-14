@@ -12,7 +12,7 @@ const jost = Jost({ subsets: ["latin"], weight: ["300", "400", "500"], variable:
 
 export const metadata: Metadata = {
   title: "New Moon Yoga Studio",
-  description: "Book your yoga class at New Moon Yoga Studio — Les Jardins de Carthage.",
+  description: "Réservez votre cours de yoga au New Moon Yoga Studio — Les Jardins de Carthage.",
   appleWebApp: { capable: true, title: "New Moon", statusBarStyle: "default" },
   manifest: "/manifest.webmanifest",
 };
@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
+    <html lang="fr" className={`${cormorant.variable} ${jost.variable}`}>
       <body>{children}</body>
     </html>
   );

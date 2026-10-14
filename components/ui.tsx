@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import type { Instructor } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 
 export function Logo({ size = 28 }: { size?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
@@ -29,7 +30,7 @@ export function initials(name: string) {
 }
 
 export function Avatar({ person, name, size = 36, tone }: { person?: Instructor; name?: string; size?: number; tone?: string }) {
-  const label = person?.name ?? name ?? "";
+  const label = name ?? person?.name ?? "";
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full font-display font-medium text-ink/80"
@@ -42,6 +43,7 @@ export function Avatar({ person, name, size = 36, tone }: { person?: Instructor;
 }
 
 export function Sheet({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: ReactNode; label: string }) {
+  const { t } = useT();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -57,7 +59,7 @@ export function Sheet({ open, onClose, children, label }: { open: boolean; onClo
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal aria-label={label}>
-      <button aria-label="Close" className="absolute inset-0 animate-fade bg-ink/30 backdrop-blur-[2px]" onClick={onClose} />
+      <button aria-label={t("a11y.close")} className="absolute inset-0 animate-fade bg-ink/30 backdrop-blur-[2px]" onClick={onClose} />
       <div className="relative max-h-[92dvh] w-full max-w-[460px] animate-sheet overflow-y-auto rounded-t-[28px] bg-linen shadow-lift no-scrollbar">
         <div className="sticky top-0 z-10 flex justify-center bg-linen/90 pt-3 pb-2 backdrop-blur">
           <span className="h-1 w-10 rounded-full bg-stone-deep" />

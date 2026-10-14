@@ -12,7 +12,7 @@ import type {
   WaitlistEntry,
 } from "./types";
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 export const SCHEDULE_DAYS = 14;
 
 export const STUDIO = {
@@ -60,17 +60,6 @@ interface Slot {
   durationMin: number;
 }
 
-const DESCRIPTIONS: Record<string, string> = {
-  hormonal:
-    "A women's practice to balance hormones, ease the symptoms of perimenopause and menopause, regulate the cycle and soothe menstrual pain — guérir le féminin sacré.",
-  stress: "Slow breath-led movement and deep relaxation to release tension and quiet the mind after the day.",
-  dos: "Gentle mobility and strengthening to relieve back pain and improve posture.",
-  debutant: "Learn the foundations step by step — postures, alignment and breathing — then go a little further each week.",
-  colonne: "A practice dedicated to a healthy, supple spine: lengthening, twists and core support.",
-  restoratif: "Fully supported postures held for several minutes to calm the nervous system and restore energy.",
-  air: "Aerial yoga in a suspended hammock — decompress the spine, build strength and play with inversions safely.",
-};
-
 // Weekly timetable — index 0 = Sunday. Durations (60 min) are assumed.
 const HORMONAL = () => s(8, 30, "Yoga pour l'équilibre hormonal", "Women's yoga", "All Levels", "rania", "studio", 60, "hormonal");
 const WEEK: (Slot & { desc: string })[][] = [
@@ -111,7 +100,7 @@ function rng(seed: number) {
   return () => (x = (x * 16807) % 2147483647) / 2147483647;
 }
 
-export const ME = { id: "me", name: "Yasmine Ben Ali", plan: "Monthly Pass", since: "2025-09-01" };
+export const ME = { id: "me", name: "Yasmine Ben Ali", plan: "monthly", since: "2025-09-01" };
 
 export function createSeed(now = new Date()): StudioState {
   const today = startOfDay(now);
@@ -165,7 +154,7 @@ export function createSeed(now = new Date()): StudioState {
         start: start.toISOString(),
         durationMin: slot.durationMin,
         capacity: room.capacity,
-        description: DESCRIPTIONS[slot.desc],
+        description: slot.desc, // i18n key → desc.<key>
         bookings,
         waitlist,
       });
