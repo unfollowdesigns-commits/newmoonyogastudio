@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { STUDIO, STYLE_META } from "@/lib/seed";
 import { endOf, formatDayLong, formatTime, hoursUntil } from "@/lib/date";
 import {
@@ -12,7 +12,6 @@ import {
   myBooking,
   myWaitlistPosition,
   spotsLeft,
-  takenSpots,
 } from "@/lib/store";
 import type { Session, StudioState } from "@/lib/types";
 import { Avatar, Icon, Sheet } from "../ui";
@@ -39,15 +38,10 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
   const meta = STYLE_META[session.style];
   const teacher = studio.instructors.find((i) => i.id === session.instructorId)!;
   const room = studio.rooms.find((r) => r.id === session.roomId)!;
-  const unit = room.unit;
-  const Unit = unit === "mat" ? "Mat" : "Hammock";
   const mine = myBooking(session, studio.me.id);
   const waitPos = myWaitlistPosition(session, studio.me.id);
   const left = spotsLeft(session);
-  const taken = useMemo(() => takenSpots(session), [session]);
-  const [spot, setSpot] = useState<number | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
-  const [showMap, setShowMap] = useState(false);
   const past = isPast(session);
   const late = hoursUntil(session.start) < studio.settings.lateCancelHours;
 
@@ -65,7 +59,7 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
         </div>
         <h2 className="mt-5 font-display text-[34px] leading-[1.05] font-medium">{session.title}</h2>
         <p className="mt-2 text-[14px] text-ink/70">
-          {formatDayLong(session.start)} · {formatTime(session.start)}–{formatTime(endOf(session.start, session.durationMin).toISOString())}
+          {formatDayLong(session.start)} · {formatTime(session.start)}–{formatTime(endOf(session.start, session.durationMin))}
         </p>
       </div>
 
@@ -73,7 +67,7 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
         <div className="grid grid-cols-3 gap-2 text-center">
           <Fact label="Duration" value={`${session.durationMin} min`} />
           <Fact label="Room" value={room.name} />
-          <Fact label={`Open ${unit}s`} value={mine ? `${left} left` : left > 0 ? `${left} of ${session.capacity}` : "Full"} warn={!mine && left === 0} />
+          <Fact label="Spots left" value={left > 0 ? `${left} of ${session.capacity}` : "Full"} warn={!mine && left === 0} />
         </div>
 
         <div className="flex items-start gap-3">
@@ -89,29 +83,13 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
           Questions? WhatsApp {STUDIO.phoneDisplay}
         </a>
 
-        {/* spot picker — optional, so booking stays one tap */}
-        {!mine && left > 0 && !past && (
-          <div className="rounded-2xl border border-stone bg-sand/60 p-4">
-            <button className="flex w-full items-center justify-between text-left" onClick={() => setShowMap((v) => !v)} aria-expanded={showMap}>
-              <span>
-                <span className="block text-[14px] font-medium">Choose your {unit}</span>
-                <span className="text-[12.5px] text-muted">{spot ? `${Unit} ${spot} selected` : "Optional — we'll pick a great spot for you"}</span>
-              </span>
-              <Icon name="chevronR" className={`text-muted transition-transform duration-300 ${showMap ? "rotate-90" : ""}`} />
-            </button>
-            {showMap && (
-              <MatMap unit={Unit} capacity={session.capacity} cols={room.cols} taken={taken} selected={spot} onSelect={setSpot} />
-            )}
-          </div>
-        )}
-
         {mine && (
           <div className="flex items-center gap-3 rounded-2xl bg-blush px-4 py-3.5 text-plum">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-plum text-linen">
               <Icon name="check" size={18} />
             </span>
             <div className="text-[14px]">
-              <div className="font-medium">You&apos;re booked{mine.spot ? ` · ${Unit} ${mine.spot}` : ""}</div>
+              <div className="font-medium">You&apos;re booked</div>
               <div className="text-[12.5px] opacity-80">Arrive 10 minutes early to settle in.</div>
             </div>
           </div>
@@ -173,9 +151,9 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
         ) : left > 0 ? (
           <button
             className="w-full rounded-full bg-plum py-4 text-[15px] tracking-wide text-linen shadow-soft transition active:scale-[0.98]"
-            onClick={() => act(book(session.id, spot))}
+            onClick={() => act(book(session.id))}
           >
-            {spot ? `Reserve ${unit} ${spot}` : `Reserve my ${unit}`}
+            Reserve my spot
           </button>
         ) : (
           <button
@@ -196,65 +174,6 @@ function Fact({ label, value, warn }: { label: string; value: string; warn?: boo
       <div className="text-[10.5px] uppercase tracking-[0.18em] text-muted">{label}</div>
       <div className={`mt-1 text-[14px] ${warn ? "text-rose" : ""}`}>{value}</div>
     </div>
-  );
-}
-
-export function MatMap({
-  unit = "Mat",
-  capacity,
-  cols,
-  taken,
-  selected,
-  onSelect,
-}: {
-  unit?: string;
-  capacity: number;
-  cols: number;
-  taken: Set<number>;
-  selected: number | null;
-  onSelect: (n: number | null) => void;
-}) {
-  return (
-    <div className="mt-4 animate-rise">
-      <div className="mb-3 rounded-full bg-stone/80 py-1 text-center text-[10.5px] uppercase tracking-[0.3em] text-muted">Teacher · Front</div>
-      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-        {Array.from({ length: capacity }, (_, i) => i + 1).map((n) => {
-          const isTaken = taken.has(n);
-          const isSel = selected === n;
-          return (
-            <button
-              key={n}
-              disabled={isTaken}
-              onClick={() => onSelect(isSel ? null : n)}
-              aria-label={`${unit} ${n}${isTaken ? " taken" : ""}`}
-              aria-pressed={isSel}
-              className={`h-12 rounded-xl text-[12px] transition-all duration-200 ${
-                isTaken
-                  ? "cursor-not-allowed bg-stone/70 text-muted/50"
-                  : isSel
-                    ? "scale-105 bg-plum text-linen shadow-soft"
-                    : "border border-mauve/40 bg-linen text-plum hover:bg-blush"
-              }`}
-            >
-              {n}
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-3 flex justify-center gap-4 text-[11px] text-muted">
-        <Legend cls="border border-mauve/40 bg-linen" label="Open" />
-        <Legend cls="bg-plum" label="Yours" />
-        <Legend cls="bg-stone" label="Taken" />
-      </div>
-    </div>
-  );
-}
-
-function Legend({ cls, label }: { cls: string; label: string }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className={`h-3 w-3 rounded ${cls}`} /> {label}
-    </span>
   );
 }
 

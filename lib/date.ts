@@ -21,16 +21,10 @@ export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-export function formatTimeParts(iso: string): { time: string; period: string } {
+// French 24-hour style, as on the studio's posters: 8h30, 19h45
+export function formatTime(iso: string | Date): string {
   const d = new Date(iso);
-  let h = d.getHours();
-  const period = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return { time: `${h}:${String(d.getMinutes()).padStart(2, "0")}`, period };
+  return `${d.getHours()}h${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 export function formatDayLong(d: Date | string): string {

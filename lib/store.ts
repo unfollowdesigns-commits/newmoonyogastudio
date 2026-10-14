@@ -146,17 +146,16 @@ function freeAndPromote(draft: StudioState, s: Session): string {
 
 // ——— client actions ———
 
-export function book(sessionId: string, spot?: number | null): Result {
+export function book(sessionId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
     if (isPast(s)) return { ok: false, message: "This class has already started." };
     if (myBooking(s, d.me.id)) return { ok: false, message: "You're already booked." };
     if (spotsLeft(s) <= 0) return { ok: false, message: "This class just filled up — join the waitlist instead." };
-    const taken = takenSpots(s);
-    const chosen = spot && !taken.has(spot) ? spot : firstFreeSpot(s);
+    const chosen = firstFreeSpot(s);
     s.waitlist = s.waitlist.filter((w) => w.memberId !== d.me.id);
     s.bookings.push({ id: uid(), memberId: d.me.id, name: d.me.name, spot: chosen, status: "booked", createdAt: new Date().toISOString() });
-    return { ok: true, message: `You're in. Spot ${chosen} is yours.` };
+    return { ok: true, message: "You're in — see you on the mat." };
   }, `${get().me.name} booked a class`);
 }
 
@@ -260,17 +259,6 @@ export function addGuest(sessionId: string, name: string, guestOf: string): Resu
     });
     return { ok: true, message: `${name.trim()} added as a guest.` };
   }, "Guest reservation added");
-}
-
-export function moveSpot(sessionId: string, bookingId: string, spot: number): Result {
-  return update((d) => {
-    const s = find(d, sessionId);
-    const b = s.bookings.find((x) => x.id === bookingId)!;
-    const other = activeBookings(s).find((x) => x.spot === spot && x.id !== bookingId);
-    if (other) other.spot = b.spot; // swap
-    b.spot = spot;
-    return { ok: true, message: other ? `Swapped ${b.name} ↔ ${other.name}` : `${b.name} moved to spot ${spot}` };
-  });
 }
 
 export function waiveFee(sessionId: string, bookingId: string): Result {

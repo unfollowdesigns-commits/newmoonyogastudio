@@ -6,10 +6,10 @@ A mobile-first booking app for **New Moon Yoga Studio** (Les Jardins de Carthage
 
 | Route    | For            | What it does |
 |----------|----------------|--------------|
-| `/`      | Clients        | 14-day calendar strip + month view, filters by style / instructor / level / room / time of day, live open-mat counts, optional mat picking on a room map, one-tap booking, waitlists, cancellation with a late-cancel warning, and "Add to calendar" (.ics). |
-| `/staff` | Teachers & front desk | Daily rosters with check-in, no-show, mat move/swap, late or no-fee cancellation, waitlist promotion, guest reservations, a late-cancel fee queue with waivers, room/equipment inventory (mats, bolsters, singing bowls…), clock in/out and weekly hours, and policy settings (late-cancel window and fee, auto-promote). |
+| `/`      | Clients        | 14-day calendar strip + month view, filters by style / instructor / level / room / time of day, live spots-left counts, one-tap booking, waitlists, cancellation with a late-cancel warning, and "Add to calendar" (.ics). |
+| `/staff` | Teachers & front desk | Daily rosters with check-in, no-show, late or no-fee cancellation, waitlist promotion, guest reservations, a late-cancel fee queue with waivers, room/equipment inventory (mats, bolsters, singing bowls…), clock in/out and weekly hours, and policy settings (late-cancel window and fee, auto-promote). |
 
-**Booking takes two taps:** tap a class, then tap **Reserve my mat**.
+**Booking takes two taps:** tap a class, then tap **Reserve my spot**. Times use the French 24-hour format (8h30, 19h45).
 
 ## Timetable
 

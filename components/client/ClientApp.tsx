@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LEVELS, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
-import { addDays, dayKey, formatDayLong, formatTimeParts, fromDayKey, greeting, relativeDay, startOfDay } from "@/lib/date";
+import { addDays, dayKey, formatDayLong, formatTime, fromDayKey, greeting, relativeDay, startOfDay } from "@/lib/date";
 import { isPast, myBooking, myWaitlistPosition, spotsLeft, useStudio } from "@/lib/store";
 import type { Level, Session, Style, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Chip, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
@@ -134,8 +134,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
             <div className="text-[10.5px] uppercase tracking-[0.25em] opacity-70">Up next</div>
             <div className="mt-1 font-display text-[22px] leading-tight">{nextUp.title}</div>
             <div className="text-[12.5px] opacity-80">
-              {relativeDay(nextUp.start)} · {formatTimeParts(nextUp.start).time} {formatTimeParts(nextUp.start).period}
-              {myBooking(nextUp, studio.me.id)?.spot ? ` · Spot ${myBooking(nextUp, studio.me.id)!.spot}` : ""}
+              {relativeDay(nextUp.start)} · {formatTime(nextUp.start)}
             </div>
           </div>
           <Icon name="arrow" />
@@ -242,7 +241,7 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
   const left = spotsLeft(s);
   const mine = myBooking(s, studio.me.id);
   const wait = myWaitlistPosition(s, studio.me.id);
-  const { time, period } = formatTimeParts(s.start);
+  const time = formatTime(s.start);
   const meta = STYLE_META[s.style];
   const started = isPast(s);
 
@@ -254,7 +253,6 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
     >
       <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-2xl" style={{ background: meta.soft }}>
         <span className="font-display text-[22px] leading-none">{time}</span>
-        <span className="mt-1 text-[10px] tracking-[0.2em] text-ink/60">{period}</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em]" style={{ color: meta.hue }}>
@@ -470,20 +468,19 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
           const b = myBooking(s, studio.me.id);
           const w = myWaitlistPosition(s, studio.me.id);
           const teacher = studio.instructors.find((i) => i.id === s.instructorId)!;
-          const { time, period } = formatTimeParts(s.start);
+          const time = formatTime(s.start);
           return (
             <button key={s.id} onClick={() => onOpen(s.id)} className="flex w-full items-center gap-4 rounded-3xl bg-linen p-4 text-left shadow-soft">
               <div className="w-16 text-center">
                 <div className="text-[10.5px] uppercase tracking-[0.15em] text-muted">{relativeDay(s.start)}</div>
                 <div className="font-display text-[22px] leading-tight">{time}</div>
-                <div className="text-[10px] tracking-[0.2em] text-muted">{period}</div>
               </div>
               <div className="min-w-0 flex-1 border-l border-stone pl-4">
                 <div className="truncate font-display text-[19px] font-medium">{s.title}</div>
                 <div className="text-[12.5px] text-muted">with {teacher.name}</div>
                 <div className="mt-2">
                   {b ? (
-                    <span className="rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">Booked{b.spot ? ` · Spot ${b.spot}` : ""}</span>
+                    <span className="rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">Booked</span>
                   ) : (
                     <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">Waitlist #{w}</span>
                   )}

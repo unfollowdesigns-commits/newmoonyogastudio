@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { STYLE_META } from "@/lib/seed";
 import { addDays, dayKey, formatDayShort, formatTime, relativeDay, startOfDay } from "@/lib/date";
 import {
@@ -10,13 +10,11 @@ import {
   adjustInventory,
   clockToggle,
   markNoShow,
-  moveSpot,
   promote,
   removeFromWaitlist,
   resetDemo,
   spotsLeft,
   staffCancel,
-  takenSpots,
   toggleCheckIn,
   updateSettings,
   useStudio,
@@ -24,7 +22,6 @@ import {
 } from "@/lib/store";
 import type { Booking, Session, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
-import { MatMap } from "../client/ClassSheet";
 
 type View = "classes" | "inventory" | "hours" | "settings";
 type Notify = (r: { ok: boolean; message: string }) => void;
@@ -293,17 +290,15 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
   const [q, setQ] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestOf, setGuestOf] = useState("");
-  const [moving, setMoving] = useState<Booking | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const room = studio.rooms.find((r) => r.id === s.roomId)!;
   const teacher = studio.instructors.find((i) => i.id === s.instructorId)!;
-  const active = activeBookings(s).sort((a, b) => (a.spot ?? 99) - (b.spot ?? 99));
+  const active = activeBookings(s).sort((a, b) => a.name.localeCompare(b.name));
   const shown = active.filter((b) => b.name.toLowerCase().includes(q.toLowerCase()));
   const cancelled = s.bookings.filter((b) => b.status === "cancelled" || b.status === "late-cancel");
   const left = spotsLeft(s);
   const mats = studio.inventory.find((i) => i.roomId === s.roomId && /^(Yoga mats|Aerial hammocks)$/.test(i.name));
   const matsReady = mats ? mats.total - mats.inRepair : 0;
-  const taken = useMemo(() => takenSpots(s), [s]);
 
   return (
     <div className="px-5 pb-8">
@@ -340,7 +335,6 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
         {shown.map((b) => (
           <li key={b.id} className="py-2.5">
             <div className="flex items-center gap-3">
-              <span className="w-8 text-center font-display text-[18px] text-muted">{b.spot ?? "–"}</span>
               <Avatar name={b.name} size={32} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 truncate text-[14px]">
@@ -366,10 +360,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
               </button>
             </div>
             {menu === b.id && (
-              <div className="mt-2 ml-11 flex animate-rise flex-wrap gap-2">
-                <SmallBtn onClick={() => setMoving(b)}>
-                  <Icon name="swap" size={14} /> Move / swap spot
-                </SmallBtn>
+              <div className="mt-2 ml-[44px] flex animate-rise flex-wrap gap-2">
                 <SmallBtn onClick={() => (notify(markNoShow(s.id, b.id)), setMenu(null))}>{b.status === "no-show" ? "Undo no-show" : "No-show"}</SmallBtn>
                 <SmallBtn onClick={() => (notify(staffCancel(s.id, b.id, true)), setMenu(null))} danger>
                   Late cancel
@@ -445,27 +436,6 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
         </section>
       )}
 
-      <Sheet open={!!moving} onClose={() => setMoving(null)} label="Move spot">
-        {moving && (
-          <div className="px-6 pb-8">
-            <h2 className="font-display text-[24px]">Move {moving.name}</h2>
-            <p className="text-[13px] text-muted">Tap an open spot to move, or a taken spot to swap places. Currently on spot {moving.spot ?? "—"}.</p>
-            <MatMap
-              unit={room.unit === "mat" ? "Mat" : "Hammock"}
-              capacity={s.capacity}
-              cols={room.cols}
-              taken={new Set()}
-              selected={moving.spot}
-              onSelect={(n) => {
-                if (n && n !== moving.spot) notify(moveSpot(s.id, moving.id, n));
-                setMoving(null);
-                setMenu(null);
-              }}
-            />
-            <p className="mt-3 text-center text-[11.5px] text-muted">{taken.size} spots occupied</p>
-          </div>
-        )}
-      </Sheet>
     </div>
   );
 }
