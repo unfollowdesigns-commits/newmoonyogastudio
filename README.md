@@ -1,6 +1,6 @@
 # New Moon Yoga Studio
 
-A mobile-first, premium booking app for a boutique yoga studio. Built with Next.js 15 + Tailwind CSS 4. It deploys to Vercel with no configuration.
+A mobile-first booking app for **New Moon Yoga Studio** (Les Jardins de Carthage, Tunis). Built with Next.js 15 + Tailwind CSS 4. It deploys to Vercel with no configuration.
 
 ## Two interfaces
 
@@ -11,12 +11,34 @@ A mobile-first, premium booking app for a boutique yoga studio. Built with Next.
 
 **Booking takes two taps:** tap a class, then tap **Reserve my mat**.
 
+## Timetable
+
+Configured in `lib/seed.ts` (`WEEK`):
+
+| Day | Class | Time |
+|-----|-------|------|
+| Monday | Yoga anti stress | 19:30 |
+| Tuesday | Yoga pour le dos | 19:45 |
+| Wednesday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 |
+| Wednesday | Yoga débutant + | 19:00 |
+| Thursday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 |
+| Thursday | Yoga santé colonne vertébrale | 19:30 |
+| Friday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 |
+| Friday | Yoga restoratif | 19:45 |
+| Saturday | Yoga air | 09:00 |
+| Sunday | Yoga air | 10:00 |
+
+Placeholders to confirm: class length (60 min), capacity (Main Studio 12 mats, Aerial Studio 8 hammocks), teachers for the non-hormonal classes ("New Moon Team"), and the late-cancel fee (10 DT, editable in Staff → Policies).
+
+Reservations / WhatsApp: 56 775 096.
+
 ## Design
 
-- Palette: warm sand and linen neutrals, muted sage, clay and rose accents. Tokens live in `app/globals.css`.
+- Logo: the studio's own crescent-moon mark (`public/logo.png`), cleaned from the Instagram profile picture.
+- Palette: warm neutrals with the logo's blush, peach and mauve. Tokens live in `app/globals.css`.
 - Type: Cormorant Garamond (display) + Jost (UI).
 - Calm motion: bottom sheets slide up and cards rise in. All motion respects `prefers-reduced-motion`.
-- Installable PWA manifest with the crescent moon mark.
+- Installable PWA manifest using the studio logo.
 
 ## Data (demo mode)
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { STYLE_META } from "@/lib/seed";
+import { STUDIO, STYLE_META } from "@/lib/seed";
 import { endOf, formatDayLong, formatTime, hoursUntil } from "@/lib/date";
 import {
   book,
@@ -39,6 +39,8 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
   const meta = STYLE_META[session.style];
   const teacher = studio.instructors.find((i) => i.id === session.instructorId)!;
   const room = studio.rooms.find((r) => r.id === session.roomId)!;
+  const unit = room.unit;
+  const Unit = unit === "mat" ? "Mat" : "Hammock";
   const mine = myBooking(session, studio.me.id);
   const waitPos = myWaitlistPosition(session, studio.me.id);
   const left = spotsLeft(session);
@@ -71,7 +73,7 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
         <div className="grid grid-cols-3 gap-2 text-center">
           <Fact label="Duration" value={`${session.durationMin} min`} />
           <Fact label="Room" value={room.name} />
-          <Fact label="Open mats" value={mine ? `${left} left` : left > 0 ? `${left} of ${session.capacity}` : "Full"} warn={!mine && left === 0} />
+          <Fact label={`Open ${unit}s`} value={mine ? `${left} left` : left > 0 ? `${left} of ${session.capacity}` : "Full"} warn={!mine && left === 0} />
         </div>
 
         <div className="flex items-start gap-3">
@@ -83,30 +85,33 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
         </div>
 
         <p className="text-[14.5px] leading-relaxed text-ink/80">{session.description}</p>
+        <a href={STUDIO.whatsapp} target="_blank" rel="noreferrer" className="inline-block text-[13px] text-plum underline underline-offset-4">
+          Questions? WhatsApp {STUDIO.phoneDisplay}
+        </a>
 
-        {/* mat picker — optional, so booking stays one tap */}
+        {/* spot picker — optional, so booking stays one tap */}
         {!mine && left > 0 && !past && (
           <div className="rounded-2xl border border-stone bg-sand/60 p-4">
             <button className="flex w-full items-center justify-between text-left" onClick={() => setShowMap((v) => !v)} aria-expanded={showMap}>
               <span>
-                <span className="block text-[14px] font-medium">Choose your mat</span>
-                <span className="text-[12.5px] text-muted">{spot ? `Mat ${spot} selected` : "Optional — we'll pick a great spot for you"}</span>
+                <span className="block text-[14px] font-medium">Choose your {unit}</span>
+                <span className="text-[12.5px] text-muted">{spot ? `${Unit} ${spot} selected` : "Optional — we'll pick a great spot for you"}</span>
               </span>
               <Icon name="chevronR" className={`text-muted transition-transform duration-300 ${showMap ? "rotate-90" : ""}`} />
             </button>
             {showMap && (
-              <MatMap capacity={session.capacity} cols={room.cols} taken={taken} selected={spot} onSelect={setSpot} />
+              <MatMap unit={Unit} capacity={session.capacity} cols={room.cols} taken={taken} selected={spot} onSelect={setSpot} />
             )}
           </div>
         )}
 
         {mine && (
-          <div className="flex items-center gap-3 rounded-2xl bg-sage-soft px-4 py-3.5 text-sage-deep">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sage-deep text-linen">
+          <div className="flex items-center gap-3 rounded-2xl bg-blush px-4 py-3.5 text-plum">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-plum text-linen">
               <Icon name="check" size={18} />
             </span>
             <div className="text-[14px]">
-              <div className="font-medium">You&apos;re booked{mine.spot ? ` · Mat ${mine.spot}` : ""}</div>
+              <div className="font-medium">You&apos;re booked{mine.spot ? ` · ${Unit} ${mine.spot}` : ""}</div>
               <div className="text-[12.5px] opacity-80">Arrive 10 minutes early to settle in.</div>
             </div>
           </div>
@@ -114,7 +119,7 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
 
         {waitPos && (
           <div className="rounded-2xl bg-clay-soft px-4 py-3.5 text-[14px] text-ink/80">
-            You&apos;re <b className="font-medium">#{waitPos}</b> on the waitlist. If a mat opens we&apos;ll book you automatically and let you know.
+            You&apos;re <b className="font-medium">#{waitPos}</b> on the waitlist. If a spot opens we&apos;ll book you automatically and let you know.
           </div>
         )}
       </div>
@@ -130,12 +135,12 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
             <div className="space-y-3">
               <p className={`text-center text-[13px] ${late ? "text-rose" : "text-muted"}`}>
                 {late
-                  ? `Within ${studio.settings.lateCancelHours}h of class — a $${studio.settings.lateCancelFee} late-cancel fee applies.`
-                  : "Free cancellation — your mat goes to the next person waiting."}
+                  ? `Within ${studio.settings.lateCancelHours}h of class — a ${studio.settings.lateCancelFee} DT late-cancel fee applies.`
+                  : "Free cancellation — your spot goes to the next person waiting."}
               </p>
               <div className="flex gap-3">
                 <button className="flex-1 rounded-full border border-stone-deep py-3.5 text-[14px]" onClick={() => setConfirmCancel(false)}>
-                  Keep my mat
+                  Keep my spot
                 </button>
                 <button
                   className="flex-1 rounded-full bg-rose py-3.5 text-[14px] text-linen"
@@ -167,10 +172,10 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
           </button>
         ) : left > 0 ? (
           <button
-            className="w-full rounded-full bg-sage-deep py-4 text-[15px] tracking-wide text-linen shadow-soft transition active:scale-[0.98]"
+            className="w-full rounded-full bg-plum py-4 text-[15px] tracking-wide text-linen shadow-soft transition active:scale-[0.98]"
             onClick={() => act(book(session.id, spot))}
           >
-            {spot ? `Reserve mat ${spot}` : "Reserve my mat"}
+            {spot ? `Reserve ${unit} ${spot}` : `Reserve my ${unit}`}
           </button>
         ) : (
           <button
@@ -195,12 +200,14 @@ function Fact({ label, value, warn }: { label: string; value: string; warn?: boo
 }
 
 export function MatMap({
+  unit = "Mat",
   capacity,
   cols,
   taken,
   selected,
   onSelect,
 }: {
+  unit?: string;
   capacity: number;
   cols: number;
   taken: Set<number>;
@@ -219,14 +226,14 @@ export function MatMap({
               key={n}
               disabled={isTaken}
               onClick={() => onSelect(isSel ? null : n)}
-              aria-label={`Mat ${n}${isTaken ? " taken" : ""}`}
+              aria-label={`${unit} ${n}${isTaken ? " taken" : ""}`}
               aria-pressed={isSel}
               className={`h-12 rounded-xl text-[12px] transition-all duration-200 ${
                 isTaken
                   ? "cursor-not-allowed bg-stone/70 text-muted/50"
                   : isSel
-                    ? "scale-105 bg-sage-deep text-linen shadow-soft"
-                    : "border border-sage/40 bg-linen text-sage-deep hover:bg-sage-soft"
+                    ? "scale-105 bg-plum text-linen shadow-soft"
+                    : "border border-mauve/40 bg-linen text-plum hover:bg-blush"
               }`}
             >
               {n}
@@ -235,8 +242,8 @@ export function MatMap({
         })}
       </div>
       <div className="mt-3 flex justify-center gap-4 text-[11px] text-muted">
-        <Legend cls="border border-sage/40 bg-linen" label="Open" />
-        <Legend cls="bg-sage-deep" label="Yours" />
+        <Legend cls="border border-mauve/40 bg-linen" label="Open" />
+        <Legend cls="bg-plum" label="Yours" />
         <Legend cls="bg-stone" label="Taken" />
       </div>
     </div>
@@ -271,7 +278,7 @@ function downloadIcs(s: Session, roomName: string) {
   const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${s.title.replace(/\s+/g, "-").toLowerCase()}.ics`;
+  a.download = `${s.title.normalize("NFD").replace(/[\u0300-\u036f']/g, "").replace(/\s+/g, "-").toLowerCase()}.ics`;
   a.click();
   URL.revokeObjectURL(url);
 }

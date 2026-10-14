@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LEVELS, SCHEDULE_DAYS, STYLES, STYLE_META } from "@/lib/seed";
+import { LEVELS, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
 import { addDays, dayKey, formatDayLong, formatTimeParts, fromDayKey, greeting, relativeDay, startOfDay } from "@/lib/date";
 import { isPast, myBooking, myWaitlistPosition, spotsLeft, useStudio } from "@/lib/store";
 import type { Level, Session, Style, StudioState } from "@/lib/types";
@@ -56,12 +56,12 @@ export default function ClientApp() {
             <li key={key}>
               <button
                 onClick={() => setTab(key)}
-                className={`flex flex-col items-center gap-1 px-4 py-1 text-[11px] tracking-wide transition-colors ${tab === key ? "text-sage-deep" : "text-muted"}`}
+                className={`flex flex-col items-center gap-1 px-4 py-1 text-[11px] tracking-wide transition-colors ${tab === key ? "text-plum" : "text-muted"}`}
                 aria-current={tab === key ? "page" : undefined}
               >
                 <Icon name={icon} size={22} />
                 {label}
-                <span className={`h-1 w-1 rounded-full transition-opacity ${tab === key ? "bg-sage-deep opacity-100" : "opacity-0"}`} />
+                <span className={`h-1 w-1 rounded-full transition-opacity ${tab === key ? "bg-plum opacity-100" : "opacity-0"}`} />
               </button>
             </li>
           ))}
@@ -121,21 +121,21 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
       <section className="px-5 pt-3">
         <p className="text-[13px] text-muted">{greeting()}, {studio.me.name.split(" ")[0]}</p>
         <h1 className="mt-1 font-display text-[38px] leading-[1.02] font-medium">
-          Find your <em className="text-sage-deep">practice</em>
+          Find your <em className="text-plum">practice</em>
         </h1>
       </section>
 
       {nextUp && (
         <button
           onClick={() => onOpen(nextUp.id)}
-          className="mx-5 mt-5 flex w-[calc(100%-2.5rem)] items-center gap-4 rounded-3xl bg-sage-deep px-5 py-4 text-left text-linen shadow-soft"
+          className="mx-5 mt-5 flex w-[calc(100%-2.5rem)] items-center gap-4 rounded-3xl bg-plum px-5 py-4 text-left text-linen shadow-soft"
         >
           <div className="flex-1">
             <div className="text-[10.5px] uppercase tracking-[0.25em] opacity-70">Up next</div>
             <div className="mt-1 font-display text-[22px] leading-tight">{nextUp.title}</div>
             <div className="text-[12.5px] opacity-80">
               {relativeDay(nextUp.start)} · {formatTimeParts(nextUp.start).time} {formatTimeParts(nextUp.start).period}
-              {myBooking(nextUp, studio.me.id)?.spot ? ` · Mat ${myBooking(nextUp, studio.me.id)!.spot}` : ""}
+              {myBooking(nextUp, studio.me.id)?.spot ? ` · Spot ${myBooking(nextUp, studio.me.id)!.spot}` : ""}
             </div>
           </div>
           <Icon name="arrow" />
@@ -146,7 +146,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
       <section className="mt-6">
         <div className="flex items-center justify-between px-5">
           <h2 className="text-[13px] font-medium tracking-wide">{formatDayLong(fromDayKey(selected))}</h2>
-          <button onClick={() => setMonthOpen(true)} className="flex items-center gap-1.5 text-[12.5px] text-sage-deep">
+          <button onClick={() => setMonthOpen(true)} className="flex items-center gap-1.5 text-[12.5px] text-plum">
             <Icon name="calendar" size={16} /> Calendar
           </button>
         </div>
@@ -170,7 +170,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
                 <span className="mt-0.5 font-display text-[22px] leading-none">{d.getDate()}</span>
                 <span className="mt-1.5 flex gap-0.5">
                   {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
-                    <span key={i} className={`h-1 w-1 rounded-full ${active ? "bg-linen/70" : "bg-sage"}`} />
+                    <span key={i} className={`h-1 w-1 rounded-full ${active ? "bg-linen/70" : "bg-mauve"}`} />
                   ))}
                 </span>
               </button>
@@ -205,7 +205,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
             <p className="font-display text-[22px]">A quiet day</p>
             <p className="mt-1 text-[13px] text-muted">No classes match. Try another day or clear filters.</p>
             {(filters.style !== "All" || extraFilters > 0) && (
-              <button onClick={() => setFilters(NO_FILTERS)} className="mt-4 text-[13px] text-sage-deep underline underline-offset-4">
+              <button onClick={() => setFilters(NO_FILTERS)} className="mt-4 text-[13px] text-plum underline underline-offset-4">
                 Clear filters
               </button>
             )}
@@ -264,7 +264,7 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
         <div className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
           <Avatar person={teacher} size={18} />
           <span className="truncate">
-            {teacher.name.split(" ")[0]} · {room.name} · {s.level}
+            {teacher.name} · {room.name}
           </span>
         </div>
         <div className="mt-3 flex items-center gap-3">
@@ -281,7 +281,7 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
 function Status({ mine, wait, left, waitCount, started }: { mine: boolean; wait: number | null; left: number; waitCount: number; started: boolean }) {
   if (mine)
     return (
-      <span className="flex items-center gap-1 rounded-full bg-sage-soft px-2.5 py-1 text-[11.5px] text-sage-deep">
+      <span className="flex items-center gap-1 rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">
         <Icon name="check" size={13} /> Booked
       </span>
     );
@@ -328,7 +328,7 @@ function FilterSheet({
           </Chip>
           {teachers.map((t) => (
             <Chip key={t.id} active={filters.instructor === t.id} onClick={() => setFilters({ ...filters, instructor: t.id })}>
-              {t.name.split(" ")[0]}
+              {t.name}
             </Chip>
           ))}
         </Group>
@@ -426,11 +426,11 @@ function MonthSheet({
                 disabled={!ok}
                 onClick={() => onPick(k)}
                 className={`flex aspect-square flex-col items-center justify-center rounded-2xl text-[15px] transition ${
-                  sel ? "bg-ink text-linen" : ok ? "hover:bg-sage-soft" : "text-stone-deep"
+                  sel ? "bg-ink text-linen" : ok ? "hover:bg-blush" : "text-stone-deep"
                 }`}
               >
                 {d.getDate()}
-                {ok && <span className={`mt-0.5 text-[9px] ${sel ? "text-linen/70" : "text-sage-deep"}`}>{n} cls</span>}
+                {ok && <span className={`mt-0.5 text-[9px] ${sel ? "text-linen/70" : "text-plum"}`}>{n} cls</span>}
               </button>
             );
           })}
@@ -454,14 +454,14 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
   return (
     <div className="animate-fade px-5 pt-3">
       <h1 className="font-display text-[36px] leading-tight font-medium">My classes</h1>
-      <p className="text-[13px] text-muted">Your mats and waitlist spots.</p>
+      <p className="text-[13px] text-muted">Your bookings and waitlist spots.</p>
 
       <div className="mt-6 space-y-3">
         {upcoming.length === 0 && (
           <div className="rounded-3xl border border-dashed border-stone-deep px-6 py-12 text-center">
             <p className="font-display text-[22px]">Nothing on the mat yet</p>
             <p className="mt-1 text-[13px] text-muted">Your next class is two taps away.</p>
-            <button onClick={goSchedule} className="mt-5 rounded-full bg-sage-deep px-6 py-3 text-[14px] text-linen">
+            <button onClick={goSchedule} className="mt-5 rounded-full bg-plum px-6 py-3 text-[14px] text-linen">
               Browse schedule
             </button>
           </div>
@@ -480,10 +480,10 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
               </div>
               <div className="min-w-0 flex-1 border-l border-stone pl-4">
                 <div className="truncate font-display text-[19px] font-medium">{s.title}</div>
-                <div className="text-[12.5px] text-muted">with {teacher.name.split(" ")[0]}</div>
+                <div className="text-[12.5px] text-muted">with {teacher.name}</div>
                 <div className="mt-2">
                   {b ? (
-                    <span className="rounded-full bg-sage-soft px-2.5 py-1 text-[11.5px] text-sage-deep">Booked{b.spot ? ` · Mat ${b.spot}` : ""}</span>
+                    <span className="rounded-full bg-blush px-2.5 py-1 text-[11.5px] text-plum">Booked{b.spot ? ` · Spot ${b.spot}` : ""}</span>
                   ) : (
                     <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">Waitlist #{w}</span>
                   )}
@@ -504,7 +504,7 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
                 <span>
                   {s.title} · {relativeDay(s.start)}
                 </span>
-                <span className={b.feeWaived ? "text-sage-deep" : "text-rose"}>{b.feeWaived ? "Waived" : `$${studio.settings.lateCancelFee}`}</span>
+                <span className={b.feeWaived ? "text-plum" : "text-rose"}>{b.feeWaived ? "Waived" : `${studio.settings.lateCancelFee} DT`}</span>
               </li>
             ))}
           </ul>
@@ -524,9 +524,8 @@ function Profile({ studio }: { studio: StudioState }) {
   return (
     <div className="animate-fade px-5 pt-3">
       <div className="relative overflow-hidden rounded-[28px] bg-ink p-6 text-linen shadow-lift">
-        <svg className="absolute -top-10 -right-10 opacity-15" width="200" height="200" viewBox="0 0 32 32" aria-hidden>
-          <path d="M20 6.2a11 11 0 1 0 0 19.6a9 9 0 1 1 0-19.6z" fill="#f4efe7" />
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-512.png" alt="" className="absolute -top-6 -right-6 h-36 w-36 rounded-full opacity-90" />
         <div className="text-[10.5px] uppercase tracking-[0.3em] opacity-60">Member</div>
         <div className="mt-2 font-display text-[30px]">{studio.me.name}</div>
         <div className="mt-6 flex items-end justify-between">
@@ -546,10 +545,25 @@ function Profile({ studio }: { studio: StudioState }) {
       <div className="mt-6 rounded-3xl bg-linen p-5 text-[13.5px] leading-relaxed text-ink/80">
         <h3 className="mb-2 font-display text-[20px] text-ink">Studio policies</h3>
         <ul className="space-y-2">
-          <li>• Cancel at least {studio.settings.lateCancelHours} hours before class to avoid a ${studio.settings.lateCancelFee} late-cancel fee.</li>
-          <li>• Waitlists promote automatically — you&apos;ll be booked and notified if a mat opens.</li>
+          <li>• Cancel at least {studio.settings.lateCancelHours} hours before class to avoid a {studio.settings.lateCancelFee} DT late-cancel fee.</li>
+          <li>• Waitlists promote automatically — you&apos;ll be booked and notified if a spot opens.</li>
           <li>• Doors open 15 minutes before class. Mats, blocks and bolsters are provided.</li>
         </ul>
+      </div>
+
+      <div className="mt-6 rounded-3xl bg-linen p-5">
+        <h3 className="font-display text-[20px]">Visit & contact</h3>
+        <p className="mt-1 flex items-center gap-1.5 text-[13.5px] text-muted">
+          <Icon name="pin" size={16} /> {STUDIO.location}
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <a href={STUDIO.whatsapp} target="_blank" rel="noreferrer" className="rounded-full bg-plum py-3 text-center text-[14px] text-linen">
+            WhatsApp {STUDIO.phoneDisplay}
+          </a>
+          <a href={STUDIO.instagram} target="_blank" rel="noreferrer" className="rounded-full border border-stone-deep py-3 text-center text-[14px]">
+            Instagram
+          </a>
+        </div>
       </div>
 
       <Link href="/staff" className="mt-6 flex items-center justify-between rounded-3xl border border-stone-deep/60 px-5 py-4 text-[14px]">

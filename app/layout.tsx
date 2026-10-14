@@ -12,13 +12,13 @@ const jost = Jost({ subsets: ["latin"], weight: ["300", "400", "500"], variable:
 
 export const metadata: Metadata = {
   title: "New Moon Yoga Studio",
-  description: "Book yoga, yin and sound bath classes at New Moon Yoga Studio.",
+  description: "Book your yoga class at New Moon Yoga Studio — Les Jardins de Carthage.",
   appleWebApp: { capable: true, title: "New Moon", statusBarStyle: "default" },
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4efe7",
+  themeColor: "#f5f0ec",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

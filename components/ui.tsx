@@ -3,20 +3,15 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Instructor } from "@/lib/types";
 
-export function Logo({ size = 28, light = false }: { size?: number; light?: boolean }) {
-  const fg = light ? "#f4efe7" : "#56644a";
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <circle cx="16" cy="16" r="11" fill="none" stroke={fg} strokeWidth="1.1" opacity="0.55" />
-      <path d="M20 6.2a11 11 0 1 0 0 19.6a9 9 0 1 1 0-19.6z" fill={fg} />
-    </svg>
-  );
+export function Logo({ size = 28 }: { size?: number }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/logo-512.png" width={size} height={size} alt="New Moon Yoga Studio" className="shrink-0 rounded-full shadow-soft" />;
 }
 
 export function Wordmark({ sub }: { sub?: string }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Logo />
+      <Logo size={42} />
       <div className="leading-none">
         <div className="font-display text-[22px] font-medium tracking-wide">New Moon</div>
         <div className="mt-0.5 text-[9.5px] uppercase tracking-[0.32em] text-muted">{sub ?? "Yoga Studio"}</div>
@@ -93,7 +88,7 @@ export function Toast({ toast }: { toast: ToastMsg }) {
       key={toast.key}
       role="status"
       className={`fixed top-[max(env(safe-area-inset-top),16px)] left-1/2 z-[60] w-[min(92vw,400px)] animate-toast rounded-2xl px-4 py-3 text-center text-sm shadow-lift ${
-        toast.tone === "warn" ? "bg-rose text-linen" : "bg-sage-deep text-linen"
+        toast.tone === "warn" ? "bg-rose text-linen" : "bg-plum text-linen"
       }`}
     >
       {toast.text}
@@ -107,7 +102,7 @@ export function Chip({ active, children, onClick }: { active?: boolean; children
       onClick={onClick}
       aria-pressed={active}
       className={`shrink-0 rounded-full border px-4 py-2 text-[13px] transition-all duration-300 ${
-        active ? "border-sage-deep bg-sage-deep text-linen" : "border-stone-deep/70 bg-linen text-ink/75 hover:border-sage"
+        active ? "border-plum bg-plum text-linen" : "border-stone-deep/70 bg-linen text-ink/75 hover:border-mauve"
       }`}
     >
       {children}
@@ -173,7 +168,7 @@ export function CapacityBar({ used, total, waitlist = 0 }: { used: number; total
   return (
     <div className="h-1 w-full overflow-hidden rounded-full bg-stone">
       <div
-        className={`h-full rounded-full transition-all duration-700 ${full ? (waitlist ? "bg-rose" : "bg-clay") : "bg-sage"}`}
+        className={`h-full rounded-full transition-all duration-700 ${full ? (waitlist ? "bg-rose" : "bg-clay") : "bg-mauve"}`}
         style={{ width: `${pct}%` }}
       />
     </div>

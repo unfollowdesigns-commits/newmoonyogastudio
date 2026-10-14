@@ -156,7 +156,7 @@ export function book(sessionId: string, spot?: number | null): Result {
     const chosen = spot && !taken.has(spot) ? spot : firstFreeSpot(s);
     s.waitlist = s.waitlist.filter((w) => w.memberId !== d.me.id);
     s.bookings.push({ id: uid(), memberId: d.me.id, name: d.me.name, spot: chosen, status: "booked", createdAt: new Date().toISOString() });
-    return { ok: true, message: `You're in. Mat ${chosen} is yours.` };
+    return { ok: true, message: `You're in. Spot ${chosen} is yours.` };
   }, `${get().me.name} booked a class`);
 }
 
@@ -172,7 +172,7 @@ export function cancelMine(sessionId: string): Result {
     freeAndPromote(d, s);
     return {
       ok: true,
-      message: late ? `Cancelled. A $${d.settings.lateCancelFee} late-cancel fee applies.` : "Cancelled — no fee. See you soon.",
+      message: late ? `Cancelled. A ${d.settings.lateCancelFee} DT late-cancel fee applies.` : "Cancelled — no fee. See you soon.",
     };
   }, `${get().me.name} cancelled a booking`);
 }
@@ -182,7 +182,7 @@ export function joinWaitlist(sessionId: string): Result {
     const s = find(d, sessionId);
     if (myWaitlistPosition(s, d.me.id)) return { ok: false, message: "You're already on the waitlist." };
     s.waitlist.push({ id: uid(), memberId: d.me.id, name: d.me.name, joinedAt: new Date().toISOString() });
-    return { ok: true, message: `You're #${s.waitlist.length} on the waitlist. We'll book you automatically if a mat opens.` };
+    return { ok: true, message: `You're #${s.waitlist.length} on the waitlist. We'll book you automatically if a spot opens.` };
   }, `${get().me.name} joined a waitlist`);
 }
 
@@ -227,7 +227,7 @@ export function staffCancel(sessionId: string, bookingId: string, late: boolean)
 export function promote(sessionId: string, waitId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
-    if (spotsLeft(s) <= 0) return { ok: false, message: "No open mats. Cancel or move someone first." };
+    if (spotsLeft(s) <= 0) return { ok: false, message: "No open spots. Cancel or move someone first." };
     const i = s.waitlist.findIndex((w) => w.id === waitId);
     const [w] = s.waitlist.splice(i, 1);
     s.bookings.push({ id: uid(), memberId: w.memberId, name: w.name, spot: firstFreeSpot(s), status: "booked", createdAt: new Date().toISOString() });
@@ -269,7 +269,7 @@ export function moveSpot(sessionId: string, bookingId: string, spot: number): Re
     const other = activeBookings(s).find((x) => x.spot === spot && x.id !== bookingId);
     if (other) other.spot = b.spot; // swap
     b.spot = spot;
-    return { ok: true, message: other ? `Swapped ${b.name} ↔ ${other.name}` : `${b.name} moved to mat ${spot}` };
+    return { ok: true, message: other ? `Swapped ${b.name} ↔ ${other.name}` : `${b.name} moved to spot ${spot}` };
   });
 }
 

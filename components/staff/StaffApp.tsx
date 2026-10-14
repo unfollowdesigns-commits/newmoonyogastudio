@@ -32,7 +32,7 @@ type Notify = (r: { ok: boolean; message: string }) => void;
 export default function StaffApp() {
   const studio = useStudio();
   const [view, setView] = useState<View>("classes");
-  const [staffId, setStaffId] = useState("jordan");
+  const [staffId, setStaffId] = useState("desk");
   const { toast, show } = useToast();
   const notify: Notify = (r) => show(r.message, r.ok ? "ok" : "warn");
 
@@ -53,7 +53,7 @@ export default function StaffApp() {
       <aside className="sticky top-0 z-30 border-b border-stone bg-linen/95 backdrop-blur lg:h-dvh lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),14px)] pb-3 lg:block lg:pt-7">
           <Wordmark sub="Staff Portal" />
-          <Link href="/" className="text-[12.5px] text-sage-deep lg:hidden">
+          <Link href="/" className="text-[12.5px] text-plum lg:hidden">
             Client app →
           </Link>
         </div>
@@ -63,7 +63,7 @@ export default function StaffApp() {
               key={key}
               onClick={() => setView(key)}
               className={`flex shrink-0 items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[13.5px] transition ${
-                view === key ? "bg-sage-deep text-linen" : "text-ink/75 hover:bg-stone/60"
+                view === key ? "bg-plum text-linen" : "text-ink/75 hover:bg-stone/60"
               }`}
             >
               <Icon name={icon} size={18} /> {label}
@@ -72,7 +72,7 @@ export default function StaffApp() {
         </nav>
         <div className="hidden px-5 lg:absolute lg:bottom-6 lg:block lg:w-64">
           <StaffSwitcher studio={studio} staffId={staffId} setStaffId={setStaffId} onShift={onShift} />
-          <Link href="/" className="mt-4 block text-[12.5px] text-sage-deep">
+          <Link href="/" className="mt-4 block text-[12.5px] text-plum">
             ← Open client app
           </Link>
         </div>
@@ -107,7 +107,7 @@ function StaffSwitcher({ studio, staffId, setStaffId, onShift }: { studio: Studi
           ))}
         </select>
       </span>
-      <span className={`h-2.5 w-2.5 rounded-full ${onShift ? "bg-sage" : "bg-stone-deep"}`} title={onShift ? "On shift" : "Off shift"} />
+      <span className={`h-2.5 w-2.5 rounded-full ${onShift ? "bg-mauve" : "bg-stone-deep"}`} title={onShift ? "On shift" : "Off shift"} />
     </label>
   );
 }
@@ -162,7 +162,7 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
         right={
           isTeacher && (
             <label className="flex items-center gap-2 text-[13px]">
-              <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-sage-deep" /> My classes only
+              <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-plum" /> My classes only
             </label>
           )
         }
@@ -235,7 +235,7 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
         <div className="rounded-3xl bg-linen p-5 shadow-soft">
           <h2 className="font-display text-[22px]">Late cancellations</h2>
           <p className="text-[12.5px] text-muted">
-            Within {studio.settings.lateCancelHours}h · ${studio.settings.lateCancelFee} fee
+            Within {studio.settings.lateCancelHours}h · {studio.settings.lateCancelFee} DT fee
           </p>
           {lateQueue.length === 0 && <p className="mt-4 text-[13px] text-muted">None — lovely.</p>}
           <ul className="mt-3 divide-y divide-stone">
@@ -249,7 +249,7 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
                 </div>
                 <button
                   onClick={() => notify(waiveFee(s.id, b.id))}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] ${b.feeWaived ? "bg-sage-soft text-sage-deep" : "border border-rose/40 text-rose"}`}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] ${b.feeWaived ? "bg-blush text-plum" : "border border-rose/40 text-rose"}`}
                 >
                   {b.feeWaived ? "Waived ✓" : "Waive fee"}
                 </button>
@@ -275,7 +275,7 @@ function Kpi({ label, value }: { label: string; value: string | number }) {
 
 const STATUS_STYLE: Record<Booking["status"], string> = {
   booked: "bg-stone text-ink/70",
-  "checked-in": "bg-sage-soft text-sage-deep",
+  "checked-in": "bg-blush text-plum",
   "no-show": "bg-rose-soft text-rose",
   cancelled: "bg-stone text-muted",
   "late-cancel": "bg-rose-soft text-rose",
@@ -301,7 +301,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
   const shown = active.filter((b) => b.name.toLowerCase().includes(q.toLowerCase()));
   const cancelled = s.bookings.filter((b) => b.status === "cancelled" || b.status === "late-cancel");
   const left = spotsLeft(s);
-  const mats = studio.inventory.find((i) => i.roomId === s.roomId && i.name === "Yoga mats");
+  const mats = studio.inventory.find((i) => i.roomId === s.roomId && /^(Yoga mats|Aerial hammocks)$/.test(i.name));
   const matsReady = mats ? mats.total - mats.inRepair : 0;
   const taken = useMemo(() => takenSpots(s), [s]);
 
@@ -327,7 +327,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
 
       {mats && matsReady < active.length && (
         <p className="mt-3 rounded-xl bg-rose-soft px-3 py-2 text-[12.5px] text-rose">
-          Only {matsReady} usable mats in {room.name} for {active.length} students — pull spares.
+          Only {matsReady} usable {room.unit}s in {room.name} for {active.length} students — pull spares.
         </p>
       )}
 
@@ -356,7 +356,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
                 onClick={() => notify(toggleCheckIn(s.id, b.id))}
                 aria-label={b.status === "checked-in" ? `Undo check-in for ${b.name}` : `Check in ${b.name}`}
                 className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
-                  b.status === "checked-in" ? "bg-sage-deep text-linen" : "border border-stone-deep text-muted hover:border-sage"
+                  b.status === "checked-in" ? "bg-plum text-linen" : "border border-stone-deep text-muted hover:border-mauve"
                 }`}
               >
                 <Icon name="check" size={18} />
@@ -368,7 +368,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
             {menu === b.id && (
               <div className="mt-2 ml-11 flex animate-rise flex-wrap gap-2">
                 <SmallBtn onClick={() => setMoving(b)}>
-                  <Icon name="swap" size={14} /> Move / swap mat
+                  <Icon name="swap" size={14} /> Move / swap spot
                 </SmallBtn>
                 <SmallBtn onClick={() => (notify(markNoShow(s.id, b.id)), setMenu(null))}>{b.status === "no-show" ? "Undo no-show" : "No-show"}</SmallBtn>
                 <SmallBtn onClick={() => (notify(staffCancel(s.id, b.id, true)), setMenu(null))} danger>
@@ -410,8 +410,8 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
       <section className="mt-6 rounded-2xl border border-stone p-4">
         <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">Guest reservation</h3>
         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Guest name" className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-sage" />
-          <input value={guestOf} onChange={(e) => setGuestOf(e.target.value)} placeholder="Guest of (optional)" className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-sage" />
+          <input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Guest name" className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
+          <input value={guestOf} onChange={(e) => setGuestOf(e.target.value)} placeholder="Guest of (optional)" className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
           <button
             disabled={left === 0}
             onClick={() => {
@@ -422,7 +422,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
                 setGuestOf("");
               }
             }}
-            className="flex items-center justify-center gap-1 rounded-xl bg-sage-deep px-4 py-2.5 text-[14px] text-linen disabled:opacity-40"
+            className="flex items-center justify-center gap-1 rounded-xl bg-plum px-4 py-2.5 text-[14px] text-linen disabled:opacity-40"
           >
             <Icon name="plus" size={16} /> Add
           </button>
@@ -437,7 +437,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
               <li key={b.id} className="flex justify-between text-muted">
                 <span>{b.name}</span>
                 <span className={b.status === "late-cancel" ? "text-rose" : ""}>
-                  {b.status === "late-cancel" ? (b.feeWaived ? "late · waived" : `late · $${studio.settings.lateCancelFee}`) : "cancelled"}
+                  {b.status === "late-cancel" ? (b.feeWaived ? "late · waived" : `late · ${studio.settings.lateCancelFee} DT`) : "cancelled"}
                 </span>
               </li>
             ))}
@@ -445,12 +445,13 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
         </section>
       )}
 
-      <Sheet open={!!moving} onClose={() => setMoving(null)} label="Move mat">
+      <Sheet open={!!moving} onClose={() => setMoving(null)} label="Move spot">
         {moving && (
           <div className="px-6 pb-8">
             <h2 className="font-display text-[24px]">Move {moving.name}</h2>
-            <p className="text-[13px] text-muted">Tap an open mat to move, or a taken mat to swap places. Currently on mat {moving.spot ?? "—"}.</p>
+            <p className="text-[13px] text-muted">Tap an open spot to move, or a taken spot to swap places. Currently on spot {moving.spot ?? "—"}.</p>
             <MatMap
+              unit={room.unit === "mat" ? "Mat" : "Hammock"}
               capacity={s.capacity}
               cols={room.cols}
               taken={new Set()}
@@ -461,7 +462,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
                 setMenu(null);
               }}
             />
-            <p className="mt-3 text-center text-[11.5px] text-muted">{taken.size} mats occupied</p>
+            <p className="mt-3 text-center text-[11.5px] text-muted">{taken.size} spots occupied</p>
           </div>
         )}
       </Sheet>
@@ -475,7 +476,7 @@ function SmallBtn({ children, onClick, danger, disabled }: { children: React.Rea
       disabled={disabled}
       onClick={onClick}
       className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] transition disabled:opacity-35 ${
-        danger ? "border-rose/40 text-rose" : "border-stone-deep text-ink/80 hover:border-sage"
+        danger ? "border-rose/40 text-rose" : "border-stone-deep text-ink/80 hover:border-mauve"
       }`}
     >
       {children}
@@ -489,7 +490,7 @@ function Inventory({ studio, notify }: { studio: StudioState; notify: Notify }) 
   const today = dayKey(new Date());
   return (
     <div className="animate-fade">
-      <PageTitle title="Rooms & equipment" sub="Track props, mats and instruments per room." />
+      <PageTitle title="Rooms & equipment" sub="Track mats, props, hammocks and instruments per room." />
       <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {studio.rooms.map((room) => {
           const items = studio.inventory.filter((i) => i.roomId === room.id);
@@ -573,7 +574,7 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
           {open && <div className="mt-1 text-[13px] opacity-70">{hrs(open.start).toFixed(1)} hours so far</div>}
           <button
             onClick={() => notify(clockToggle(me))}
-            className={`mt-6 w-full rounded-full py-3.5 text-[15px] ${open ? "bg-linen text-ink" : "bg-sage text-linen"}`}
+            className={`mt-6 w-full rounded-full py-3.5 text-[15px] ${open ? "bg-linen text-ink" : "bg-mauve text-linen"}`}
           >
             {open ? "Clock out" : "Clock in"}
           </button>
@@ -650,17 +651,17 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
           >
             {[0, 5, 10, 15, 20, 25].map((f) => (
               <option key={f} value={f}>
-                ${f}
+                {f} DT
               </option>
             ))}
           </select>
         </Row>
-        <Row title="Auto-promote waitlist" sub="When a mat opens, book the next person automatically.">
+        <Row title="Auto-promote waitlist" sub="When a spot opens, book the next person automatically.">
           <button
             role="switch"
             aria-checked={st.autoPromote}
             onClick={() => notify(updateSettings({ autoPromote: !st.autoPromote }))}
-            className={`relative h-7 w-12 rounded-full transition ${st.autoPromote ? "bg-sage-deep" : "bg-stone-deep"}`}
+            className={`relative h-7 w-12 rounded-full transition ${st.autoPromote ? "bg-plum" : "bg-stone-deep"}`}
           >
             <span className={`absolute top-1 h-5 w-5 rounded-full bg-linen transition-all ${st.autoPromote ? "left-6" : "left-1"}`} />
           </button>

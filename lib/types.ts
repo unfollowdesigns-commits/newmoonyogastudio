@@ -1,4 +1,4 @@
-export type Style = "Vinyasa" | "Yin" | "Hatha" | "Sound Bath" | "Restorative" | "Power";
+export type Style = "Anti-stress" | "Back care" | "Beginner+" | "Restorative" | "Aerial" | "Women's yoga";
 export type Level = "All Levels" | "Beginner" | "Intermediate" | "Advanced";
 
 export type BookingStatus = "booked" | "checked-in" | "no-show" | "cancelled" | "late-cancel";
@@ -15,7 +15,8 @@ export interface Room {
   id: string;
   name: string;
   capacity: number;
-  cols: number; // mat grid columns, row 1 is the front of the room
+  cols: number; // spot grid columns, row 1 is the front of the room
+  unit: "mat" | "hammock";
 }
 
 export interface Booking {

@@ -12,34 +12,41 @@ import type {
   WaitlistEntry,
 } from "./types";
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 export const SCHEDULE_DAYS = 14;
 
-export const STYLES: Style[] = ["Vinyasa", "Yin", "Hatha", "Sound Bath", "Restorative", "Power"];
-export const LEVELS: Level[] = ["All Levels", "Beginner", "Intermediate", "Advanced"];
-
-export const STYLE_META: Record<Style, { hue: string; soft: string; blurb: string }> = {
-  Vinyasa: { hue: "#B7835F", soft: "#F1E4D8", blurb: "Breath-linked flow that builds gentle heat." },
-  Yin: { hue: "#6E7F86", soft: "#E3E8E8", blurb: "Long, quiet holds for deep connective release." },
-  Hatha: { hue: "#8A9A7B", soft: "#E6EADF", blurb: "Grounded, steady postures with mindful alignment." },
-  "Sound Bath": { hue: "#9C8AA5", soft: "#ECE6EE", blurb: "Lie back and rest in waves of crystal & Tibetan bowls." },
-  Restorative: { hue: "#A79C7E", soft: "#EEEADF", blurb: "Fully supported shapes to calm the nervous system." },
-  Power: { hue: "#A86A55", soft: "#F1DFD7", blurb: "Strong, athletic sequencing to build heat and focus." },
+export const STUDIO = {
+  name: "New Moon Yoga Studio",
+  location: "Les Jardins de Carthage, Tunis",
+  phoneDisplay: "56 775 096",
+  whatsapp: "https://wa.me/21656775096",
+  instagram: "https://www.instagram.com/new_moon_yoga_studio/",
+  currency: "DT",
 };
 
+export const STYLES: Style[] = ["Women's yoga", "Anti-stress", "Back care", "Beginner+", "Restorative", "Aerial"];
+export const LEVELS: Level[] = ["All Levels", "Beginner"];
+
+export const STYLE_META: Record<Style, { hue: string; soft: string }> = {
+  "Women's yoga": { hue: "#a0667a", soft: "#f3e3e6" },
+  "Anti-stress": { hue: "#7d8a9a", soft: "#e6e9ee" },
+  "Back care": { hue: "#8a9a7b", soft: "#e8ebe1" },
+  "Beginner+": { hue: "#b98366", soft: "#f3e6dc" },
+  Restorative: { hue: "#9a8d74", soft: "#efeadf" },
+  Aerial: { hue: "#8f7aa0", soft: "#ebe5f0" },
+};
+
+// Teachers for classes other than Rania Sam's aren't published yet — "team" is a placeholder.
 const instructors: Instructor[] = [
-  { id: "leilani", name: "Leilani Moreau", role: "teacher", tone: "#D9C6B0", bio: "E-RYT 500. Teaches slow, intelligent flow rooted in breath and play." },
-  { id: "sora", name: "Sora Nakamura", role: "teacher", tone: "#C9D1C0", bio: "Yin & meditation teacher who loves the quiet spaces between poses." },
-  { id: "imani", name: "Imani Brooks", role: "teacher", tone: "#E2CDBF", bio: "Former dancer bringing strength, rhythm and joy to every class." },
-  { id: "theo", name: "Theo Alvarez", role: "teacher", tone: "#CFC8D6", bio: "Sound practitioner trained in Nepal; holds space with bowls and gong." },
-  { id: "priya", name: "Priya Raman", role: "teacher", tone: "#D8D2BF", bio: "Hatha and restorative specialist with a therapeutic lens." },
-  { id: "jordan", name: "Jordan Lee", role: "front-desk", tone: "#D6D6CF", bio: "Studio manager and front desk lead." },
+  { id: "rania", name: "Rania Sam", role: "teacher", tone: "#ead3c6", bio: "Professeure certifiée en yoga féminin. Guides the hormonal balance series." },
+  { id: "team", name: "New Moon Team", role: "teacher", tone: "#e4dbd8", bio: "Taught by the New Moon Yoga Studio teaching team." },
+  { id: "desk", name: "Front Desk", role: "front-desk", tone: "#dcd6d2", bio: "Reservations & studio management." },
 ];
 
+// Capacities are placeholders — adjust to the studio's real numbers.
 const rooms: Room[] = [
-  { id: "moon", name: "Moon Room", capacity: 20, cols: 5 },
-  { id: "sun", name: "Sun Room", capacity: 12, cols: 4 },
-  { id: "garden", name: "Garden Loft", capacity: 8, cols: 4 },
+  { id: "studio", name: "Main Studio", capacity: 12, cols: 4, unit: "mat" },
+  { id: "aerial", name: "Aerial Studio", capacity: 8, cols: 4, unit: "hammock" },
 ];
 
 interface Slot {
@@ -53,65 +60,27 @@ interface Slot {
   durationMin: number;
 }
 
-const DESCRIPTIONS: Record<Style, string> = {
-  Vinyasa:
-    "A fluid, creative sequence moving with the breath. Expect sun salutations, standing balances and a long, grounded savasana.",
-  Yin: "Long-held floor postures that invite stillness and soften the fascia. Bolsters and blankets provided.",
-  Hatha: "Classic postures held with care and clear alignment cues. A steady practice for building awareness and strength.",
-  "Sound Bath":
-    "A deeply restful immersion in crystal and Himalayan singing bowls. No yoga experience needed — just arrive and lie down.",
-  Restorative: "Fully supported, passive shapes held for several minutes each. Leave feeling unhurried and renewed.",
-  Power: "Dynamic, strength-forward flow with inversions and arm balance options. Bring water and your curiosity.",
+const DESCRIPTIONS: Record<string, string> = {
+  hormonal:
+    "A women's practice to balance hormones, ease the symptoms of perimenopause and menopause, regulate the cycle and soothe menstrual pain — guérir le féminin sacré.",
+  stress: "Slow breath-led movement and deep relaxation to release tension and quiet the mind after the day.",
+  dos: "Gentle mobility and strengthening to relieve back pain and improve posture.",
+  debutant: "Learn the foundations step by step — postures, alignment and breathing — then go a little further each week.",
+  colonne: "A practice dedicated to a healthy, supple spine: lengthening, twists and core support.",
+  restoratif: "Fully supported postures held for several minutes to calm the nervous system and restore energy.",
+  air: "Aerial yoga in a suspended hammock — decompress the spine, build strength and play with inversions safely.",
 };
 
-// Weekly timetable — index 0 = Sunday
-const WEEK: Slot[][] = [
-  [
-    s(8, 30, "Slow Sunday Flow", "Vinyasa", "All Levels", "leilani", "moon", 75),
-    s(10, 30, "Gentle Hatha", "Hatha", "Beginner", "priya", "sun", 60),
-    s(16, 0, "New Moon Sound Bath", "Sound Bath", "All Levels", "theo", "garden", 60),
-    s(18, 0, "Yin & Yoga Nidra", "Yin", "All Levels", "sora", "moon", 75),
-  ],
-  [
-    s(6, 30, "Sunrise Flow", "Vinyasa", "Intermediate", "imani", "moon", 60),
-    s(9, 0, "Hatha Foundations", "Hatha", "Beginner", "priya", "sun", 60),
-    s(12, 15, "Lunch Break Power", "Power", "Intermediate", "imani", "moon", 45),
-    s(17, 30, "Evening Vinyasa", "Vinyasa", "All Levels", "leilani", "moon", 60),
-    s(19, 15, "Deep Yin", "Yin", "All Levels", "sora", "sun", 75),
-  ],
-  [
-    s(6, 30, "Power Rise", "Power", "Advanced", "imani", "moon", 60),
-    s(9, 30, "Restore & Release", "Restorative", "All Levels", "priya", "garden", 60),
-    s(12, 15, "Midday Hatha", "Hatha", "All Levels", "priya", "sun", 45),
-    s(18, 0, "Moonlit Vinyasa", "Vinyasa", "Intermediate", "leilani", "moon", 75),
-    s(20, 0, "Crystal Bowl Bath", "Sound Bath", "All Levels", "theo", "garden", 60),
-  ],
-  [
-    s(6, 30, "Sunrise Flow", "Vinyasa", "All Levels", "leilani", "moon", 60),
-    s(9, 0, "Yin for Beginners", "Yin", "Beginner", "sora", "sun", 60),
-    s(12, 15, "Lunch Break Power", "Power", "Intermediate", "imani", "moon", 45),
-    s(17, 30, "Alignment Hatha", "Hatha", "Intermediate", "priya", "sun", 60),
-    s(19, 15, "Restorative Candlelight", "Restorative", "All Levels", "priya", "garden", 75),
-  ],
-  [
-    s(6, 30, "Power Rise", "Power", "Intermediate", "imani", "moon", 60),
-    s(9, 30, "Gentle Hatha", "Hatha", "Beginner", "priya", "sun", 60),
-    s(12, 15, "Express Vinyasa", "Vinyasa", "All Levels", "leilani", "moon", 45),
-    s(18, 0, "Flow & Arm Balances", "Vinyasa", "Advanced", "imani", "moon", 75),
-    s(20, 0, "Deep Yin", "Yin", "All Levels", "sora", "sun", 60),
-  ],
-  [
-    s(7, 0, "Sunrise Flow", "Vinyasa", "All Levels", "leilani", "moon", 60),
-    s(12, 15, "Midday Restore", "Restorative", "All Levels", "priya", "garden", 45),
-    s(17, 30, "Friday Power Hour", "Power", "Intermediate", "imani", "moon", 60),
-    s(19, 30, "Gong & Bowl Bath", "Sound Bath", "All Levels", "theo", "moon", 75),
-  ],
-  [
-    s(8, 0, "Weekend Warrior Flow", "Vinyasa", "Intermediate", "imani", "moon", 75),
-    s(10, 0, "Hatha Foundations", "Hatha", "Beginner", "priya", "sun", 60),
-    s(12, 0, "Yin & Meditation", "Yin", "All Levels", "sora", "sun", 75),
-    s(17, 0, "Sunset Sound Bath", "Sound Bath", "All Levels", "theo", "garden", 60),
-  ],
+// Weekly timetable — index 0 = Sunday. Durations (60 min) are assumed.
+const HORMONAL = () => s(8, 30, "Yoga pour l'équilibre hormonal", "Women's yoga", "All Levels", "rania", "studio", 60, "hormonal");
+const WEEK: (Slot & { desc: string })[][] = [
+  [s(10, 0, "Yoga air", "Aerial", "All Levels", "team", "aerial", 60, "air")],
+  [s(19, 30, "Yoga anti stress", "Anti-stress", "All Levels", "team", "studio", 60, "stress")],
+  [s(19, 45, "Yoga pour le dos", "Back care", "All Levels", "team", "studio", 60, "dos")],
+  [HORMONAL(), s(19, 0, "Yoga débutant +", "Beginner+", "Beginner", "team", "studio", 60, "debutant")],
+  [HORMONAL(), s(19, 30, "Yoga santé colonne vertébrale", "Back care", "All Levels", "team", "studio", 60, "colonne")],
+  [HORMONAL(), s(19, 45, "Yoga restoratif", "Restorative", "All Levels", "team", "studio", 60, "restoratif")],
+  [s(9, 0, "Yoga air", "Aerial", "All Levels", "team", "aerial", 60, "air")],
 ];
 
 function s(
@@ -123,15 +92,16 @@ function s(
   instructorId: string,
   roomId: string,
   durationMin: number,
-): Slot {
-  return { hour, minute, title, style, level, instructorId, roomId, durationMin };
+  desc: string,
+): Slot & { desc: string } {
+  return { hour, minute, title, style, level, instructorId, roomId, durationMin, desc };
 }
 
 const MEMBERS = [
-  "Ava Chen", "Noah Patel", "Isla Romero", "Mateo Silva", "Zara Ahmed", "Eli Novak", "Luna Park", "Kai Okafor",
-  "Maren Holt", "Ravi Desai", "Nora Quinn", "Jonah Weiss", "Amara Diallo", "Felix Grant", "Hana Sato", "Owen Ruiz",
-  "Celeste Byrne", "Dev Kapoor", "Freya Lund", "Malik Owens", "Tessa Moore", "Yuki Tanaka", "Iris Vale", "Leo Marchetti",
-  "Sienna Cole", "Arjun Mehta", "Wren Talbot", "Elena Petrova",
+  "Amira Ben Salah", "Yasmine Trabelsi", "Salma Gharbi", "Ines Jaziri", "Meriem Ayari", "Nour Hammami", "Sarra Mejri",
+  "Rim Bouazizi", "Hela Chaabane", "Leila Mansour", "Asma Karoui", "Olfa Ben Romdhane", "Emna Khelifi", "Dorra Sassi",
+  "Ons Mzoughi", "Khadija Riahi", "Sonia Dridi", "Wafa Zouari", "Molka Feki", "Aziza Baccouche", "Lina Belhadj",
+  "Mariem Kallel", "Sana Ferchichi", "Nadia Ouertani",
 ];
 
 // deterministic pseudo-random so every visitor sees the same studio
@@ -141,7 +111,7 @@ function rng(seed: number) {
   return () => (x = (x * 16807) % 2147483647) / 2147483647;
 }
 
-export const ME = { id: "me", name: "Maya Laurent", plan: "Unlimited Monthly", since: "2024-03-02" };
+export const ME = { id: "me", name: "Yasmine Ben Ali", plan: "Monthly Pass", since: "2025-09-01" };
 
 export function createSeed(now = new Date()): StudioState {
   const today = startOfDay(now);
@@ -155,7 +125,7 @@ export function createSeed(now = new Date()): StudioState {
       const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), slot.hour, slot.minute);
       const room = rooms.find((r) => r.id === slot.roomId)!;
       const rand = rng(day.getDate() * 97 + day.getMonth() * 31 + i * 13 + 7);
-      const fillPattern = [0.55, 0.8, 1, 0.65, 1, 0.4, 0.9, 0.7];
+      const fillPattern = [0.75, 1, 0.6, 0.9, 0.5, 1, 0.7];
       // further-out classes are emptier
       const decay = Math.max(0.25, 1 - Math.max(0, d - 2) * 0.07);
       let ratio = fillPattern[(i + day.getDay()) % fillPattern.length] * decay;
@@ -195,7 +165,7 @@ export function createSeed(now = new Date()): StudioState {
         start: start.toISOString(),
         durationMin: slot.durationMin,
         capacity: room.capacity,
-        description: DESCRIPTIONS[slot.style],
+        description: DESCRIPTIONS[slot.desc],
         bookings,
         waitlist,
       });
@@ -212,29 +182,23 @@ export function createSeed(now = new Date()): StudioState {
   }
 
   const inventory: InventoryItem[] = [
-    item("moon", "Yoga mats", 24, 1, 20),
-    item("moon", "Cork blocks", 44, 0, 40),
-    item("moon", "Straps", 22, 0, 20),
-    item("moon", "Bolsters", 20, 2, 20),
-    item("moon", "Gong (32\")", 1, 0, 1),
-    item("sun", "Yoga mats", 14, 0, 12),
-    item("sun", "Cork blocks", 24, 0, 24),
-    item("sun", "Bolsters", 12, 1, 12),
-    item("sun", "Blankets", 14, 0, 12),
-    item("garden", "Yoga mats", 10, 0, 8),
-    item("garden", "Bolsters", 16, 0, 16),
-    item("garden", "Eye pillows", 10, 1, 8),
-    item("garden", "Crystal singing bowls", 7, 0, 7),
-    item("garden", "Tibetan singing bowls", 5, 1, 5),
+    item("studio", "Yoga mats", 14, 1, 12),
+    item("studio", "Cork blocks", 24, 0, 24),
+    item("studio", "Straps", 12, 0, 12),
+    item("studio", "Bolsters", 12, 1, 12),
+    item("studio", "Blankets", 14, 0, 12),
+    item("studio", "Singing bowls", 3, 0, 2),
+    item("aerial", "Aerial hammocks", 8, 0, 8),
+    item("aerial", "Rigging sets (carabiners, daisy chains)", 9, 1, 8),
+    item("aerial", "Crash mats", 8, 0, 8),
   ];
 
   const shifts: Shift[] = [];
-  for (let d = 1; d <= 4; d++) {
+  for (let d = 1; d <= 6; d++) {
     const day = addDays(today, -d);
-    shifts.push(shift("jordan", day, 7, 0, 15, 0));
-    shifts.push(shift("priya", day, 8, 45, 13, 15));
-    if (d % 2 === 0) shifts.push(shift("imani", day, 6, 0, 13, 0));
-    if (d % 2 === 1) shifts.push(shift("leilani", day, 17, 0, 19, 30));
+    shifts.push(shift("desk", day, 8, 0, 12, 0));
+    if ([3, 4, 5].includes(day.getDay())) shifts.push(shift("rania", day, 8, 0, 9, 45));
+    shifts.push(shift("team", day, 18, 30, 21, 0));
   }
 
   return {
@@ -246,7 +210,7 @@ export function createSeed(now = new Date()): StudioState {
     sessions,
     inventory,
     shifts,
-    settings: { lateCancelHours: 12, lateCancelFee: 15, autoPromote: true },
+    settings: { lateCancelHours: 12, lateCancelFee: 10, autoPromote: true },
     activity: [],
   };
 }
