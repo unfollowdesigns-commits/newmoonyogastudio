@@ -40,6 +40,8 @@ create table if not exists public.profiles (
   lang text not null default 'fr',
   created_at timestamptz not null default now()
 );
+-- studio policy: an unannounced absence can mean exclusion from bookings
+alter table public.profiles add column if not exists blocked boolean not null default false;
 
 create table if not exists public.staff_invites (
   email text primary key,
@@ -109,8 +111,8 @@ create table if not exists public.waitlist (
 
 create table if not exists public.settings (
   id int primary key default 1 check (id = 1),
-  late_cancel_hours int not null default 12,
-  late_cancel_fee int not null default 10,
+  late_cancel_hours int not null default 2,
+  late_cancel_fee int not null default 0,
   auto_promote boolean not null default true
 );
 
@@ -260,6 +262,7 @@ begin
   if not exists (select 1 from profiles where id = uid and first_name <> '' and phone <> '') then
     return res(false, 'msg.profileRequired');
   end if;
+  if exists (select 1 from profiles where id = uid and blocked) then return res(false, 'msg.blocked'); end if;
   select * into s from sessions where id = p_session for update; -- serialises bookings for this class
   if s.id is null or s.cancelled then return res(false, 'msg.noBooking'); end if;
   if s.starts_at <= now() then return res(false, 'msg.started'); end if;
@@ -296,6 +299,7 @@ begin
   if not exists (select 1 from profiles where id = uid and first_name <> '' and phone <> '') then
     return res(false, 'msg.profileRequired');
   end if;
+  if exists (select 1 from profiles where id = uid and blocked) then return res(false, 'msg.blocked'); end if;
   select * into s from sessions where id = p_session for update;
   if s.id is null or s.starts_at <= now() then return res(false, 'msg.started'); end if;
   if exists (select 1 from bookings where session_id = p_session and user_id = uid and status in ('booked', 'checked-in', 'no-show')) then
@@ -425,9 +429,10 @@ begin
   return res(true, 'msg.clockIn');
 end $$;
 
+drop function if exists public.staff_members();
 create or replace function public.staff_members()
 returns table (id uuid, first_name text, last_name text, phone text, email text, role text, created_at timestamptz,
-               attended int, no_shows int, late_cancels int, upcoming int)
+               attended int, no_shows int, late_cancels int, upcoming int, blocked boolean)
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not is_staff() then return; end if;
@@ -436,12 +441,36 @@ begin
     count(*) filter (where b.status = 'checked-in')::int,
     count(*) filter (where b.status = 'no-show')::int,
     count(*) filter (where b.status = 'late-cancel')::int,
-    count(*) filter (where b.status = 'booked' and s.starts_at > now())::int
+    count(*) filter (where b.status = 'booked' and s.starts_at > now())::int,
+    p.blocked
   from profiles p
   left join bookings b on b.user_id = p.id
   left join sessions s on s.id = b.session_id
   group by p.id
   order by p.created_at desc;
+end $$;
+
+-- exclude / re-admit a client (cancels their upcoming bookings and waitlist spots when excluding)
+create or replace function public.staff_set_blocked(p_user uuid, p_blocked boolean) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare nm text; sid uuid;
+begin
+  if not is_staff() then return res(false, 'msg.forbidden'); end if;
+  if exists (select 1 from profiles where id = p_user and role <> 'client') then return res(false, 'msg.forbidden'); end if;
+  update profiles set blocked = p_blocked where id = p_user returning trim(first_name || ' ' || last_name) into nm;
+  if p_blocked then
+    delete from waitlist where user_id = p_user;
+    for sid in
+      update bookings b set status = 'cancelled', cancelled_at = now()
+      from sessions s
+      where b.session_id = s.id and b.user_id = p_user and b.status = 'booked' and s.starts_at > now()
+      returning b.session_id
+    loop
+      if (select auto_promote from settings where id = 1) then perform promote_next(sid); end if;
+    end loop;
+  end if;
+  perform log_activity(case when p_blocked then 'log.blocked' else 'log.unblocked' end, jsonb_build_object('name', nm));
+  return res(true, case when p_blocked then 'msg.blocked.done' else 'msg.unblocked' end, jsonb_build_object('name', nm));
 end $$;
 
 -- ───────────────────────── owner actions ─────────────────────────
@@ -554,34 +583,34 @@ insert into public.teachers (id, name, tone, sort) values
 on conflict (id) do nothing;
 
 insert into public.rooms (id, capacity, cols, unit) values
-  ('studio', 12, 4, 'mat'),
-  ('aerial', 8, 4, 'hammock')
+  ('studio', 10, 5, 'mat'),
+  ('aerial', 4, 4, 'hammock')
 on conflict (id) do nothing;
 
 insert into public.weekly_slots (id, weekday, start_time, title, style, level, teacher_id, room_id, duration_min, desc_key) values
-  (1, 1, '19:30', 'Yoga anti stress', 'Anti-stress', 'All Levels', 'team', 'studio', 60, 'stress'),
-  (2, 2, '19:45', 'Yoga pour le dos', 'Back care', 'All Levels', 'team', 'studio', 60, 'dos'),
-  (3, 3, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 60, 'hormonal'),
-  (4, 3, '19:00', 'Yoga débutant +', 'Beginner+', 'Beginner', 'team', 'studio', 60, 'debutant'),
-  (5, 4, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 60, 'hormonal'),
-  (6, 4, '19:30', 'Yoga santé colonne vertébrale', 'Back care', 'All Levels', 'team', 'studio', 60, 'colonne'),
-  (7, 5, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 60, 'hormonal'),
-  (8, 5, '19:45', 'Yoga restoratif', 'Restorative', 'All Levels', 'team', 'studio', 60, 'restoratif'),
+  (1, 1, '19:30', 'Yoga anti stress', 'Anti-stress', 'All Levels', 'team', 'studio', 90, 'stress'),
+  (2, 2, '19:30', 'Yoga pour le dos', 'Back care', 'All Levels', 'team', 'studio', 90, 'dos'),
+  (3, 3, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
+  (4, 3, '19:30', 'Yoga débutant +', 'Beginner+', 'Beginner', 'team', 'studio', 90, 'debutant'),
+  (5, 4, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
+  (6, 4, '19:30', 'Yoga santé colonne vertébrale', 'Back care', 'All Levels', 'team', 'studio', 90, 'colonne'),
+  (7, 5, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
+  (8, 5, '19:30', 'Yoga restoratif', 'Restorative', 'All Levels', 'team', 'studio', 90, 'restoratif'),
   (9, 6, '09:00', 'Yoga air', 'Aerial', 'All Levels', 'team', 'aerial', 60, 'air'),
   (10, 0, '10:00', 'Yoga air', 'Aerial', 'All Levels', 'team', 'aerial', 60, 'air')
 on conflict (id) do nothing;
 select setval(pg_get_serial_sequence('public.weekly_slots', 'id'), greatest((select max(id) from public.weekly_slots), 1));
 
 insert into public.inventory (id, room_id, name, total, in_repair, minimum) values
-  ('studio-mats', 'studio', 'Yoga mats', 14, 0, 12),
-  ('studio-blocks', 'studio', 'Cork blocks', 24, 0, 24),
-  ('studio-straps', 'studio', 'Straps', 12, 0, 12),
-  ('studio-bolsters', 'studio', 'Bolsters', 12, 0, 12),
-  ('studio-blankets', 'studio', 'Blankets', 14, 0, 12),
+  ('studio-mats', 'studio', 'Yoga mats', 12, 0, 10),
+  ('studio-blocks', 'studio', 'Cork blocks', 20, 0, 20),
+  ('studio-straps', 'studio', 'Straps', 10, 0, 10),
+  ('studio-bolsters', 'studio', 'Bolsters', 10, 0, 10),
+  ('studio-blankets', 'studio', 'Blankets', 12, 0, 10),
   ('studio-bowls', 'studio', 'Singing bowls', 3, 0, 2),
-  ('aerial-hammocks', 'aerial', 'Aerial hammocks', 8, 0, 8),
-  ('aerial-rigging', 'aerial', 'Rigging sets (carabiners, daisy chains)', 9, 0, 8),
-  ('aerial-crash', 'aerial', 'Crash mats', 8, 0, 8)
+  ('aerial-hammocks', 'aerial', 'Aerial hammocks', 4, 0, 4),
+  ('aerial-rigging', 'aerial', 'Rigging sets (carabiners, daisy chains)', 4, 0, 4),
+  ('aerial-crash', 'aerial', 'Crash mats', 4, 0, 4)
 on conflict (id) do nothing;
 
 select public.ensure_sessions(14);

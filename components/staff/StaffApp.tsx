@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { STYLE_META } from "@/lib/seed";
-import { addDays, dayKey, formatTime, startOfDay } from "@/lib/date";
+import { addDays, dayKey, formatTime, startOfDay, formatDuration } from "@/lib/date";
 import { LangToggle, useT } from "@/lib/i18n";
 import {
   activeBookings,
@@ -130,7 +130,7 @@ export default function StaffApp() {
           <StaffSwitcher studio={studio} staffId={staffId} setStaffId={setStaffId} onShift={onShift} />
         </div>
         {view === "classes" && <Classes studio={studio} staffId={staffId} teacherId={teacherId} notify={notify} />}
-        {view === "members" && <Members studio={studio} />}
+        {view === "members" && <Members studio={studio} notify={notify} />}
         {view === "inventory" && <Inventory studio={studio} notify={notify} />}
         {view === "hours" && <Hours studio={studio} me={staffId} notify={notify} />}
         {view === "team" && isOwner && <Team studio={studio} notify={notify} />}
@@ -276,7 +276,7 @@ function Classes({ studio, staffId, teacherId, notify }: { studio: StudioState; 
                   <button onClick={() => setOpenId(s.id)} className="grid w-full grid-cols-[64px_1fr_auto] items-center gap-4 px-5 py-4 text-left transition hover:bg-sand/60">
                     <div>
                       <div className="text-[15px]">{formatTime(s.start)}</div>
-                      <div className="text-[11px] text-muted">{s.durationMin} min</div>
+                      <div className="text-[11px] text-muted">{formatDuration(s.durationMin)}</div>
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ function Classes({ studio, staffId, teacherId, notify }: { studio: StudioState; 
         <div className="rounded-3xl bg-linen p-5 shadow-soft">
           <h2 className="font-display text-[22px]">{t("staff.late")}</h2>
           <p className="text-[12.5px] text-muted">
-            {t("staff.lateSub", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })}
+            {t(studio.settings.lateCancelFee > 0 ? "staff.lateSub" : "staff.lateSubNoFee", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })}
           </p>
           {lateQueue.length === 0 && <p className="mt-4 text-[13px] text-muted">{t("staff.lateNone")}</p>}
           <ul className="mt-3 divide-y divide-stone">
@@ -319,12 +319,14 @@ function Classes({ studio, staffId, teacherId, notify }: { studio: StudioState; 
                     {s.title} · {L.relDay(s.start)}
                   </div>
                 </div>
+                {studio.settings.lateCancelFee > 0 && (
                 <button
                   onClick={() => notify(waiveFee(s.id, b.id))}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] ${b.feeWaived ? "bg-blush text-plum" : "border border-rose/40 text-rose"}`}
                 >
                   {b.feeWaived ? t("staff.waived") : t("staff.waive")}
                 </button>
+                )}
               </li>
             ))}
           </ul>
@@ -508,7 +510,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
               <li key={b.id} className="flex justify-between text-muted">
                 <span>{b.name}</span>
                 <span className={b.status === "late-cancel" ? "text-rose" : ""}>
-                  {b.status === "late-cancel" ? (b.feeWaived ? t("staff.lateWaived") : t("staff.lateFee", { fee: studio.settings.lateCancelFee })) : t("staff.cancelledOne")}
+                  {b.status === "late-cancel" ? (studio.settings.lateCancelFee === 0 ? t("status.late-cancel") : b.feeWaived ? t("staff.lateWaived") : t("staff.lateFee", { fee: studio.settings.lateCancelFee })) : t("staff.cancelledOne")}
                 </span>
               </li>
             ))}

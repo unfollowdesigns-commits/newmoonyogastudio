@@ -5,7 +5,7 @@ import { downloadCsv } from "@/lib/csv";
 import { dayKey, formatTime } from "@/lib/date";
 import { useT } from "@/lib/i18n";
 import { remote } from "@/lib/remote";
-import { loadInvites, loadMembers, setRole, whatsappLink, type Result } from "@/lib/store";
+import { loadInvites, loadMembers, setBlocked, setRole, whatsappLink, type Result } from "@/lib/store";
 import type { MemberRow, Role, StudioState } from "@/lib/types";
 import { Avatar, Icon } from "../ui";
 
@@ -13,7 +13,7 @@ type Notify = (r: Result | Promise<Result>) => void;
 
 /* ——————————————— Members ——————————————— */
 
-export function Members({ studio }: { studio: StudioState }) {
+export function Members({ studio, notify }: { studio: StudioState; notify: Notify }) {
   const L = useT();
   const t = L.t;
   const [rows, setRows] = useState<MemberRow[] | null>(null);
@@ -104,12 +104,13 @@ export function Members({ studio }: { studio: StudioState }) {
             {shown.map((m) => {
               const wa = whatsappLink(m.phone);
               return (
-                <li key={m.id} className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 px-4 py-3.5 md:grid-cols-[auto_1.4fr_1fr_1.6fr_repeat(4,70px)]">
+                <li key={m.id} className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 px-4 py-3.5 md:grid-cols-[auto_1.4fr_1fr_1.6fr_repeat(4,70px)_96px]">
                   <Avatar name={`${m.firstName} ${m.lastName}`} size={36} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 truncate text-[14.5px]">
                       {m.firstName} {m.lastName}
                       {m.role !== "client" && <span className="rounded-full bg-blush px-2 py-0.5 text-[10.5px] text-plum">{t(`staff.role.${m.role}`)}</span>}
+                      {m.blocked && <span className="rounded-full bg-rose-soft px-2 py-0.5 text-[10.5px] text-rose">{t("members.blockedBadge")}</span>}
                     </div>
                     <div className="text-[11.5px] text-muted">
                       {t("members.joined")} {date(m.createdAt)}
@@ -131,6 +132,22 @@ export function Members({ studio }: { studio: StudioState }) {
                     <Num label={t("members.late")} n={m.lateCancels} warn />
                     <Num label={t("members.upcoming")} n={m.upcoming} />
                   </div>
+                  {m.role !== "client" ? <span className="hidden md:block" /> : (
+                    <div className="col-span-2 flex justify-end md:col-span-1">
+                      <button
+                        onClick={() => {
+                          const name = `${m.firstName} ${m.lastName}`.trim();
+                          if (!m.blocked && !confirm(t("members.confirmBlock", { name }))) return;
+                          const p = setBlocked(m.id, !m.blocked);
+                          notify(p);
+                          void p.then(() => loadMembers().then(setRows));
+                        }}
+                        className={`rounded-full border px-3 py-1.5 text-[12px] ${m.blocked ? "border-stone-deep text-ink/80" : "border-rose/40 text-rose"}`}
+                      >
+                        {m.blocked ? t("members.unblock") : t("members.block")}
+                      </button>
+                    </div>
+                  )}
                 </li>
               );
             })}

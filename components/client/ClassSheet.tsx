@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { STUDIO, STYLE_META } from "@/lib/seed";
-import { endOf, formatTime, hoursUntil } from "@/lib/date";
+import { endOf, formatTime, hoursUntil, formatDuration } from "@/lib/date";
 import { useT } from "@/lib/i18n";
 import {
   book,
@@ -82,7 +82,7 @@ function Body({
 
       <div className="space-y-6 px-6 pt-6">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <Fact label={t("class.duration")} value={`${session.durationMin} min`} />
+          <Fact label={t("class.duration")} value={formatDuration(session.durationMin)} />
           <Fact label={t("class.room")} value={i.room(room)} />
           <Fact label={t("class.spotsLeft")} value={left > 0 ? t("class.ofCap", { n: left, cap: session.capacity }) : t("class.full")} warn={!mine && left === 0} />
         </div>
@@ -130,7 +130,7 @@ function Body({
             <div className="space-y-3">
               <p className={`text-center text-[13px] ${late ? "text-rose" : "text-muted"}`}>
                 {late
-                  ? t("class.lateWarn", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })
+                  ? t(studio.settings.lateCancelFee > 0 ? "class.lateWarn" : "class.lateWarnNoFee", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })
                   : t("class.freeCancel")}
               </p>
               <div className="flex gap-3">
@@ -179,6 +179,9 @@ function Body({
           >
             {t("class.joinWait", { n: waitCount(session) })}
           </button>
+        )}
+        {!past && !mine && !waitPos && (
+          <p className="mt-2 text-center text-[11.5px] text-muted">{t("class.commitment", { h: studio.settings.lateCancelHours })}</p>
         )}
       </div>
     </div>

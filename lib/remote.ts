@@ -298,6 +298,7 @@ export const remote = {
   adjustInventory: (item: string, field: "total" | "inRepair", delta: number) => call("staff_adjust_inventory", { p_item: item, p_field: field, p_delta: delta }),
   clockToggle: () => call("staff_clock_toggle"),
   updateSettings: (s: Settings) => call("owner_update_settings", { p_hours: s.lateCancelHours, p_fee: s.lateCancelFee, p_auto: s.autoPromote }),
+  setBlocked: (user: string, blocked: boolean) => call("staff_set_blocked", { p_user: user, p_blocked: blocked }),
   setRole: (email: string, role: Role, teacher: string | null) => call("owner_set_role", { p_email: email, p_role: role, p_teacher: teacher }),
 
   async members(): Promise<MemberRow[]> {
@@ -314,6 +315,7 @@ export const remote = {
       noShows: m.no_shows as number,
       lateCancels: m.late_cancels as number,
       upcoming: m.upcoming as number,
+      blocked: !!m.blocked,
     }));
   },
 

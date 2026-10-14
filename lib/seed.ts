@@ -12,7 +12,7 @@ import type {
   WaitlistEntry,
 } from "./types";
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;
 export const SCHEDULE_DAYS = 14;
 
 export const STUDIO = {
@@ -23,6 +23,19 @@ export const STUDIO = {
   instagram: "https://www.instagram.com/new_moon_yoga_studio/",
   currency: "DT",
 };
+
+// From the studio's price list (validity: how long the pass lasts)
+export type Price = { kind: "trial" | "pack" | "unlimited"; n?: number; price: number; validity?: ["days" | "month" | "months" | "year", number] };
+export const PRICES: Price[] = [
+  { kind: "trial", price: 40 },
+  { kind: "pack", n: 5, price: 150, validity: ["days", 20] },
+  { kind: "pack", n: 10, price: 280, validity: ["month", 1] },
+  { kind: "pack", n: 15, price: 360, validity: ["months", 2] },
+  { kind: "pack", n: 20, price: 440, validity: ["months", 3] },
+  { kind: "pack", n: 30, price: 670, validity: ["months", 4] },
+  { kind: "pack", n: 50, price: 990, validity: ["months", 6] },
+  { kind: "unlimited", price: 1540, validity: ["year", 1] },
+];
 
 export const STYLES: Style[] = ["Women's yoga", "Anti-stress", "Back care", "Beginner+", "Restorative", "Aerial"];
 export const LEVELS: Level[] = ["All Levels", "Beginner"];
@@ -45,8 +58,8 @@ const instructors: Instructor[] = [
 
 // Capacities are placeholders — adjust to the studio's real numbers.
 const rooms: Room[] = [
-  { id: "studio", name: "Main Studio", capacity: 12, cols: 4, unit: "mat" },
-  { id: "aerial", name: "Aerial Studio", capacity: 8, cols: 4, unit: "hammock" },
+  { id: "studio", name: "Main Studio", capacity: 10, cols: 5, unit: "mat" },
+  { id: "aerial", name: "Aerial Studio", capacity: 4, cols: 4, unit: "hammock" },
 ];
 
 interface Slot {
@@ -60,15 +73,15 @@ interface Slot {
   durationMin: number;
 }
 
-// Weekly timetable — index 0 = Sunday. Durations (60 min) are assumed.
-const HORMONAL = () => s(8, 30, "Yoga pour l'équilibre hormonal", "Women's yoga", "All Levels", "rania", "studio", 60, "hormonal");
+// Weekly timetable — index 0 = Sunday. Regular classes 1h30, therapeutic (women) 2h, aerial 1h.
+const HORMONAL = () => s(8, 30, "Yoga pour l'équilibre hormonal", "Women's yoga", "All Levels", "rania", "studio", 120, "hormonal");
 const WEEK: (Slot & { desc: string })[][] = [
   [s(10, 0, "Yoga air", "Aerial", "All Levels", "team", "aerial", 60, "air")],
-  [s(19, 30, "Yoga anti stress", "Anti-stress", "All Levels", "team", "studio", 60, "stress")],
-  [s(19, 45, "Yoga pour le dos", "Back care", "All Levels", "team", "studio", 60, "dos")],
-  [HORMONAL(), s(19, 0, "Yoga débutant +", "Beginner+", "Beginner", "team", "studio", 60, "debutant")],
-  [HORMONAL(), s(19, 30, "Yoga santé colonne vertébrale", "Back care", "All Levels", "team", "studio", 60, "colonne")],
-  [HORMONAL(), s(19, 45, "Yoga restoratif", "Restorative", "All Levels", "team", "studio", 60, "restoratif")],
+  [s(19, 30, "Yoga anti stress", "Anti-stress", "All Levels", "team", "studio", 90, "stress")],
+  [s(19, 30, "Yoga pour le dos", "Back care", "All Levels", "team", "studio", 90, "dos")],
+  [HORMONAL(), s(19, 30, "Yoga débutant +", "Beginner+", "Beginner", "team", "studio", 90, "debutant")],
+  [HORMONAL(), s(19, 30, "Yoga santé colonne vertébrale", "Back care", "All Levels", "team", "studio", 90, "colonne")],
+  [HORMONAL(), s(19, 30, "Yoga restoratif", "Restorative", "All Levels", "team", "studio", 90, "restoratif")],
   [s(9, 0, "Yoga air", "Aerial", "All Levels", "team", "aerial", 60, "air")],
 ];
 
@@ -171,15 +184,15 @@ export function createSeed(now = new Date()): StudioState {
   }
 
   const inventory: InventoryItem[] = [
-    item("studio", "Yoga mats", 14, 1, 12),
-    item("studio", "Cork blocks", 24, 0, 24),
-    item("studio", "Straps", 12, 0, 12),
-    item("studio", "Bolsters", 12, 1, 12),
-    item("studio", "Blankets", 14, 0, 12),
+    item("studio", "Yoga mats", 12, 1, 10),
+    item("studio", "Cork blocks", 20, 0, 20),
+    item("studio", "Straps", 10, 0, 10),
+    item("studio", "Bolsters", 10, 1, 10),
+    item("studio", "Blankets", 12, 0, 10),
     item("studio", "Singing bowls", 3, 0, 2),
-    item("aerial", "Aerial hammocks", 8, 0, 8),
-    item("aerial", "Rigging sets (carabiners, daisy chains)", 9, 1, 8),
-    item("aerial", "Crash mats", 8, 0, 8),
+    item("aerial", "Aerial hammocks", 4, 0, 4),
+    item("aerial", "Rigging sets (carabiners, daisy chains)", 4, 0, 4),
+    item("aerial", "Crash mats", 4, 0, 4),
   ];
 
   const shifts: Shift[] = [];
@@ -201,7 +214,7 @@ export function createSeed(now = new Date()): StudioState {
     sessions,
     inventory,
     shifts,
-    settings: { lateCancelHours: 12, lateCancelFee: 10, autoPromote: true },
+    settings: { lateCancelHours: 2, lateCancelFee: 0, autoPromote: true },
     activity: [],
   };
 }

@@ -110,6 +110,7 @@ export interface MemberRow {
   noShows: number;
   lateCancels: number;
   upcoming: number;
+  blocked?: boolean;
 }
 
 export interface Settings {
@@ -122,6 +123,7 @@ export interface StudioState {
   mode: "demo" | "live";
   auth: AuthStatus;
   staff?: Instructor[]; // people who clock hours (live mode); demo uses instructors
+  blockedIds?: string[]; // demo only: excluded clients
   version: number;
   seededAt: string;
   me: Member;

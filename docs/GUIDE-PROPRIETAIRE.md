@@ -34,6 +34,8 @@ de la liste est inscrite automatiquement.
 - La barre de recherche trouve un nom, un numéro ou un email.
 - **Télécharger les membres (Excel)** : la liste complète, s'ouvre dans Excel ou Google Sheets.
 - **Télécharger les réservations (Excel)** : toutes les réservations des 3 derniers mois et du mois à venir.
+- **Exclure** : pour une cliente qui ne prévient pas de son absence (votre règle). Ses réservations à venir sont
+  annulées (sa place va à la liste d'attente) et elle ne peut plus réserver. **Réintégrer** annule l'exclusion.
 
 > Faites ces deux téléchargements **une fois par mois** et gardez-les (Google Drive par exemple) : c'est votre copie de sécurité.
 
@@ -62,26 +64,33 @@ Pour retirer un accès : **Retirer l'accès** à côté de son nom.
 
 ## 6. Les règles → onglet **Règles**
 
-- **Délai d'annulation tardive** (ex. 12 heures avant le cours)
-- **Frais d'annulation tardive** (ex. 10 DT)
+- **Délai d'annulation** : 2 heures avant la séance (votre règle actuelle)
+- **Frais d'annulation tardive** : 0 DT (pas de frais : votre règle est l'exclusion en cas d'absence non signalée)
 - **Inscription auto depuis la liste d'attente** (activé conseillé)
 
 Les clientes voient ces règles dans leur profil.
 
-## 7. Matériel et heures
+## 7. Pleine lune et tarifs
+
+- L'appli calcule toute seule la date de la **prochaine pleine lune** et l'affiche en haut du planning, avec un
+  bouton « Réserver sur WhatsApp ». Les clientes vous écrivent directement pour l'événement.
+- Vos **tarifs** (séance d'essai, carnets, accès illimité) sont affichés dans l'onglet Profil des clientes.
+  Le paiement se fait toujours au studio.
+
+## 8. Matériel et heures
 
 - **Salles & matériel** : nombre de tapis, briques, bolsters, hamacs… et combien sont en réparation.
   Un message rouge prévient s'il manque du matériel pour le nombre d'inscrites.
 - **Heures** : chaque membre de l'équipe pointe *Début de service* / *Fin de service*. Le tableau
   montre les heures des 7 derniers jours.
 
-## 8. Modifier le planning
+## 9. Modifier le planning
 
 Le planning (jours, heures, cours) est enregistré dans la base de données. Pour ajouter, déplacer ou
 supprimer un cours régulier, ou annuler une date précise (jour férié, vacances), envoyez simplement un
 message à votre développeur·euse : c'est une modification de 2 minutes.
 
-## 9. Données personnelles (loi tunisienne n° 2004-63)
+## 10. Données personnelles (loi tunisienne n° 2004-63)
 
 - Chaque cliente donne son accord en cochant la case à l'inscription.
 - Si une cliente demande la suppression de ses données : prévenez votre développeur·euse, qui supprime

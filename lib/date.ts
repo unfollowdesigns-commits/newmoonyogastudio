@@ -35,6 +35,12 @@ export function studioDate(y: number, month: number, day: number, h: number, m: 
   return new Date(Date.UTC(y, month, day, h - 1, m));
 }
 
+// 60 → "1h", 90 → "1h30", 120 → "2h"
+export function formatDuration(min: number): string {
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? `${h}h${m ? String(m).padStart(2, "0") : ""}` : `${m} min`;
+}
+
 // French 24-hour style, as on the studio's posters: 8h30, 19h45
 export function formatTime(iso: string | Date): string {
   const { h, m } = studioHM(iso);

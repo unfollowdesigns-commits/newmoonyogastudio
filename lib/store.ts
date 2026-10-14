@@ -47,6 +47,8 @@ export const resetDemo = demo.resetDemo;
 
 // ——— owner ———
 export const loadMembers = (): Promise<MemberRow[]> => (LIVE ? remote.members() : Promise.resolve(demo.demoMembers()));
+export const setBlocked = (memberId: string, blocked: boolean) =>
+  LIVE ? remote.setBlocked(memberId, blocked) : ok(demo.setBlocked(memberId, blocked));
 export const setRole = (email: string, role: Role, teacher: string | null) =>
   LIVE ? remote.setRole(email, role, teacher) : ok({ ok: false, message: "msg.demoOnly" });
 export const loadInvites = () => (LIVE ? remote.invites() : Promise.resolve([]));

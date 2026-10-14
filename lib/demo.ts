@@ -122,6 +122,7 @@ export function book(sessionId: string): Result {
   return update((d) => {
     const s = find(d, sessionId);
     if (isPast(s)) return { ok: false, message: "msg.started" };
+    if (d.blockedIds?.includes(d.me.id)) return { ok: false, message: "msg.blocked" };
     if (myBooking(s, d.me.id)) return { ok: false, message: "msg.alreadyBooked" };
     if (spotsLeft(s) <= 0) return { ok: false, message: "msg.justFull" };
     const chosen = firstFreeSpot(s);
@@ -269,6 +270,32 @@ export function updateSettings(patch: Partial<Settings>): Result {
   });
 }
 
+export function setBlocked(memberId: string, blocked: boolean): Result {
+  return update(
+    (d) => {
+      const set = new Set(d.blockedIds ?? []);
+      if (blocked) set.add(memberId);
+      else set.delete(memberId);
+      d.blockedIds = [...set];
+      let name = "";
+      for (const s of d.sessions) {
+        if (blocked) s.waitlist = s.waitlist.filter((w) => w.memberId !== memberId);
+        for (const b of s.bookings) {
+          if (b.memberId !== memberId) continue;
+          name = b.name;
+          if (blocked && b.status === "booked" && !isPast(s)) {
+            b.status = "cancelled";
+            b.cancelledAt = new Date().toISOString();
+            b.spot = null;
+          }
+        }
+      }
+      return { ok: true, message: blocked ? "msg.blocked.done" : "msg.unblocked", vars: { name } };
+    },
+    { key: blocked ? "log.blocked" : "log.unblocked" },
+  );
+}
+
 export function resetDemo() {
   state = createSeed();
   persist();
@@ -284,12 +311,13 @@ export function demoMembers(): MemberRow[] {
       const [firstName, ...rest] = b.name.split(" ");
       const m =
         map.get(b.memberId) ??
-        ({ id: b.memberId, firstName, lastName: rest.join(" "), phone: "", email: "", role: "client", createdAt: b.createdAt, attended: 0, noShows: 0, lateCancels: 0, upcoming: 0 } as MemberRow);
+        ({ id: b.memberId, firstName, lastName: rest.join(" "), phone: "", email: "", role: "client", createdAt: b.createdAt, attended: 0, noShows: 0, lateCancels: 0, upcoming: 0, blocked: get().blockedIds?.includes(b.memberId) } as MemberRow);
       if (b.status === "checked-in") m.attended++;
       if (b.status === "no-show") m.noShows++;
       if (b.status === "late-cancel") m.lateCancels++;
       if (b.status === "booked" && !isPast(s)) m.upcoming++;
       if (b.createdAt < m.createdAt) m.createdAt = b.createdAt;
+      if (m.createdAt > new Date().toISOString()) m.createdAt = new Date(Date.now() - 864e5).toISOString();
       map.set(b.memberId, m);
     }
   }

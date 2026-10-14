@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LEVELS, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
-import { addDays, dayKey, formatTime, fromDayKey, startOfDay, studioHM } from "@/lib/date";
+import { LEVELS, PRICES, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
+import { nextFullMoons } from "@/lib/moon";
+import { addDays, dayKey, formatTime, fromDayKey, startOfDay, studioHM, formatDuration } from "@/lib/date";
 import { LangToggle, useT } from "@/lib/i18n";
 import { auth, isPast, LIVE, myBooking, myWaitlistPosition, spotsLeft, useStudio, waitCount, type Result } from "@/lib/store";
 import { AuthSheet } from "../AuthSheet";
@@ -125,6 +126,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
   const [filterOpen, setFilterOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
+  const moonDays = useMemo(() => new Set(nextFullMoons(addDays(today, -1), 2).map((d) => dayKey(d))), [today.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
   const i = useT();
   const { t } = i;
 
@@ -184,6 +186,8 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
         </button>
       )}
 
+      <MoonCard />
+
       {/* date strip */}
       <section className="mt-6">
         <div className="flex items-center justify-between px-5">
@@ -209,7 +213,12 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
                 <span className={`text-[10.5px] uppercase tracking-[0.15em] ${active ? "opacity-70" : "text-muted"}`}>
                   {d.toLocaleDateString(i.locale, { weekday: "short" }).replace(".", "")}
                 </span>
-                <span className="mt-0.5 font-display text-[22px] leading-none">{d.getDate()}</span>
+                <span className="relative mt-0.5 font-display text-[22px] leading-none">
+                  {d.getDate()}
+                  {moonDays.has(k) && (
+                    <span className="absolute -top-1 -right-2.5 h-2 w-2 rounded-full bg-clay ring-2 ring-linen" title={t("moon.badge")} />
+                  )}
+                </span>
                 <span className="mt-1.5 flex gap-0.5">
                   {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
                     <span key={i} className={`h-1 w-1 rounded-full ${active ? "bg-linen/70" : "bg-mauve"}`} />
@@ -300,7 +309,7 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em]" style={{ color: meta.hue }}>
-          {i.style(s.style)} <span className="text-muted">· {s.durationMin} min</span>
+          {i.style(s.style)} <span className="text-muted">· {formatDuration(s.durationMin)}</span>
         </div>
         <div className="mt-0.5 truncate font-display text-[20px] leading-tight font-medium">{s.title}</div>
         <div className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
@@ -563,7 +572,7 @@ function Bookings({ studio, onOpen, goSchedule, signIn }: { studio: StudioState;
                 <span>
                   {s.title} · {i.relDay(s.start)}
                 </span>
-                <span className={b.feeWaived ? "text-plum" : "text-rose"}>{b.feeWaived ? t("bookings.waived") : `${studio.settings.lateCancelFee} DT`}</span>
+                <span className={b.feeWaived ? "text-plum" : "text-rose"}>{studio.settings.lateCancelFee === 0 ? t("status.late-cancel") : b.feeWaived ? t("bookings.waived") : `${studio.settings.lateCancelFee} DT`}</span>
               </li>
             ))}
           </ul>
@@ -640,12 +649,16 @@ function Profile({ studio, account }: { studio: StudioState; account: { signIn: 
         </>
       )}
 
+      <Prices />
+
       <div className="mt-6 rounded-3xl bg-linen p-5 text-[13.5px] leading-relaxed text-ink/80">
         <h3 className="mb-2 font-display text-[20px] text-ink">{t("profile.policies")}</h3>
         <ul className="space-y-2">
           <li>• {t("profile.policy1", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })}</li>
           <li>• {t("profile.policy2")}</li>
           <li>• {t("profile.policy3")}</li>
+          {studio.settings.lateCancelFee > 0 && <li>• {t("profile.policyFee", { fee: studio.settings.lateCancelFee })}</li>}
+          <li>• {t("profile.policy4")}</li>
         </ul>
       </div>
 
@@ -680,6 +693,53 @@ function Stat({ label, value }: { label: string; value: number }) {
     <div className="rounded-3xl bg-linen p-5">
       <div className="font-display text-[36px] leading-none">{value}</div>
       <div className="mt-1 text-[12px] text-muted">{label}</div>
+    </div>
+  );
+}
+
+/* ——————————————— Full moon & prices ——————————————— */
+
+function MoonCard() {
+  const i = useT();
+  const { t } = i;
+  const [moon] = useState(() => nextFullMoons(new Date(Date.now() - 12 * 36e5), 1)[0]);
+  const date = moon.toLocaleDateString(i.locale, { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Tunis" });
+  const days = Math.round((startOfDay(moon).getTime() - startOfDay(new Date()).getTime()) / 864e5);
+  const when = days <= 0 ? t("moon.today") : days === 1 ? t("moon.tomorrow") : t("moon.inDays", { n: days });
+  const wa = `${STUDIO.whatsapp}?text=${encodeURIComponent(t("moon.waText", { date }))}`;
+  return (
+    <section className="relative mx-5 mt-5 overflow-hidden rounded-3xl bg-ink px-5 py-5 text-linen shadow-soft">
+      <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff7ea,#e9d6bf_55%,#c9ad8f)] opacity-90 shadow-[0_0_60px_10px_rgba(240,220,190,0.25)]" />
+      <div className="relative max-w-[72%]">
+        <div className="text-[10.5px] uppercase tracking-[0.25em] opacity-70">{t("moon.title")}</div>
+        <div className="mt-1 font-display text-[22px] leading-tight first-letter:uppercase">{t("moon.date", { date })}</div>
+        <div className="text-[12px] opacity-70">{when}</div>
+        <p className="mt-2 text-[12.5px] leading-relaxed opacity-80">{t("moon.body")}</p>
+        <a href={wa} target="_blank" rel="noreferrer" className="mt-3 inline-block rounded-full bg-linen px-4 py-2 text-[13px] text-ink">
+          {t("moon.cta")}
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function Prices() {
+  const { t } = useT();
+  return (
+    <div className="mt-6 rounded-3xl bg-linen p-5">
+      <h3 className="font-display text-[20px]">{t("profile.prices")}</h3>
+      <ul className="mt-3 divide-y divide-stone">
+        {PRICES.map((p, k) => (
+          <li key={k} className="flex items-baseline justify-between gap-3 py-2.5">
+            <span>
+              <span className="text-[14px]">{p.kind === "trial" ? t("price.trial") : p.kind === "unlimited" ? t("price.unlimited") : t("price.pack", { n: p.n! })}</span>
+              {p.validity && <span className="ml-2 text-[12px] text-muted">{t(`validity.${p.validity[0]}`, { n: p.validity[1] })}</span>}
+            </span>
+            <span className="shrink-0 font-display text-[19px]">{p.price} DT</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[12px] text-muted">{t("profile.pricesNote")}</p>
     </div>
   );
 }

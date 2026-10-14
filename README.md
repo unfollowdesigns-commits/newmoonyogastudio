@@ -19,20 +19,25 @@ French (default) and English, switchable with the FR / EN toggle in the header o
 
 Configured in `lib/seed.ts` (`WEEK`):
 
-| Day | Class | Time |
-|-----|-------|------|
-| Monday | Yoga anti stress | 19:30 |
-| Tuesday | Yoga pour le dos | 19:45 |
-| Wednesday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 |
-| Wednesday | Yoga débutant + | 19:00 |
-| Thursday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 |
-| Thursday | Yoga santé colonne vertébrale | 19:30 |
-| Friday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 |
-| Friday | Yoga restoratif | 19:45 |
-| Saturday | Yoga air | 09:00 |
-| Sunday | Yoga air | 10:00 |
+| Day | Class | Time | Length |
+|-----|-------|------|--------|
+| Monday | Yoga anti stress | 19:30 | 1h30 |
+| Tuesday | Yoga pour le dos | 19:30 | 1h30 |
+| Wednesday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 | 2h |
+| Wednesday | Yoga débutant + | 19:30 | 1h30 |
+| Thursday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 | 2h |
+| Thursday | Yoga santé colonne vertébrale | 19:30 | 1h30 |
+| Friday | Yoga pour l'équilibre hormonal (Rania Sam) | 08:30 | 2h |
+| Friday | Yoga restoratif | 19:30 | 1h30 |
+| Saturday | Yoga air | 09:00 | 1h |
+| Sunday | Yoga air | 10:00 | 1h |
 
-Placeholders to confirm: class length (60 min), capacity (Main Studio 12 mats, Aerial Studio 8 hammocks), teachers for the non-hormonal classes ("New Moon Team"), and the late-cancel fee (10 DT, editable in Staff → Policies).
+Capacity: 10 per class in the main studio, 4 for yoga air (4 hammocks). Booking policy: cancel at least 2h
+before a class (24h before an event); no fee, but staff can exclude a client after an unannounced absence.
+The price list is shown in the client profile, and the next full moon (calculated, `lib/moon.ts`) is
+shown on the schedule with a WhatsApp booking link for the monthly full-moon event.
+
+Still to confirm: teachers for the non-hormonal classes ("New Moon Team" for now).
 
 Reservations / WhatsApp: 56 775 096.
 
