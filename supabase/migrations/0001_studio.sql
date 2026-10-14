@@ -115,6 +115,8 @@ create table if not exists public.settings (
   late_cancel_fee int not null default 0,
   auto_promote boolean not null default true
 );
+-- studio rule: bookings close 8 hours before a class
+alter table public.settings add column if not exists booking_cutoff_hours int not null default 8;
 
 create table if not exists public.inventory (
   id text primary key,
@@ -266,6 +268,9 @@ begin
   select * into s from sessions where id = p_session for update; -- serialises bookings for this class
   if s.id is null or s.cancelled then return res(false, 'msg.noBooking'); end if;
   if s.starts_at <= now() then return res(false, 'msg.started'); end if;
+  if s.starts_at - now() < make_interval(hours => (select booking_cutoff_hours from settings where id = 1)) then
+    return res(false, 'msg.bookingClosed', jsonb_build_object('h', (select booking_cutoff_hours from settings where id = 1)));
+  end if;
   if exists (select 1 from bookings where session_id = p_session and user_id = uid and status in ('booked', 'checked-in', 'no-show')) then
     return res(false, 'msg.alreadyBooked');
   end if;
@@ -302,6 +307,9 @@ begin
   if exists (select 1 from profiles where id = uid and blocked) then return res(false, 'msg.blocked'); end if;
   select * into s from sessions where id = p_session for update;
   if s.id is null or s.starts_at <= now() then return res(false, 'msg.started'); end if;
+  if s.starts_at - now() < make_interval(hours => (select booking_cutoff_hours from settings where id = 1)) then
+    return res(false, 'msg.bookingClosed', jsonb_build_object('h', (select booking_cutoff_hours from settings where id = 1)));
+  end if;
   if exists (select 1 from bookings where session_id = p_session and user_id = uid and status in ('booked', 'checked-in', 'no-show')) then
     return res(false, 'msg.alreadyBooked');
   end if;
@@ -475,11 +483,13 @@ end $$;
 
 -- ───────────────────────── owner actions ─────────────────────────
 
-create or replace function public.owner_update_settings(p_hours int, p_fee int, p_auto boolean) returns jsonb
+drop function if exists public.owner_update_settings(int, int, boolean);
+create or replace function public.owner_update_settings(p_hours int, p_fee int, p_auto boolean, p_cutoff int) returns jsonb
 language plpgsql security definer set search_path = public as $$
 begin
   if not is_owner() then return res(false, 'msg.forbidden'); end if;
-  update settings set late_cancel_hours = p_hours, late_cancel_fee = p_fee, auto_promote = p_auto where id = 1;
+  update settings set late_cancel_hours = p_hours, late_cancel_fee = p_fee, auto_promote = p_auto,
+    booking_cutoff_hours = greatest(p_cutoff, 0) where id = 1;
   return res(true, 'msg.saved');
 end $$;
 

@@ -5,7 +5,7 @@ import { createSeed, STATE_VERSION } from "./seed";
 import { hoursUntil } from "./date";
 import type { MemberRow, Session, Settings, StudioState } from "./types";
 import type { Result } from "./store";
-import { activeBookings, isPast, myBooking, myWaitlistPosition, spotsLeft, takenSpots } from "./helpers";
+import { activeBookings, bookingClosed, isPast, myBooking, myWaitlistPosition, spotsLeft, takenSpots } from "./helpers";
 
 const KEY = "newmoon-studio-v" + STATE_VERSION;
 const STALE_MS = 3 * 24 * 3600e3;
@@ -123,6 +123,7 @@ export function book(sessionId: string): Result {
     const s = find(d, sessionId);
     if (isPast(s)) return { ok: false, message: "msg.started" };
     if (d.blockedIds?.includes(d.me.id)) return { ok: false, message: "msg.blocked" };
+    if (bookingClosed(s, d.settings.bookingCutoffHours)) return { ok: false, message: "msg.bookingClosed", vars: { h: d.settings.bookingCutoffHours } };
     if (myBooking(s, d.me.id)) return { ok: false, message: "msg.alreadyBooked" };
     if (spotsLeft(s) <= 0) return { ok: false, message: "msg.justFull" };
     const chosen = firstFreeSpot(s);
@@ -147,8 +148,9 @@ export function cancelMine(sessionId: string): Result {
 }
 
 export function joinWaitlist(sessionId: string): Result {
-  return update((d) => {
+  return update((d): Result => {
     const s = find(d, sessionId);
+    if (bookingClosed(s, d.settings.bookingCutoffHours)) return { ok: false, message: "msg.bookingClosed", vars: { h: d.settings.bookingCutoffHours } };
     if (myWaitlistPosition(s, d.me.id)) return { ok: false, message: "msg.alreadyWaiting" };
     s.waitlist.push({ id: uid(), memberId: d.me.id, name: d.me.name, joinedAt: new Date().toISOString() });
     return { ok: true, message: "msg.waitJoined", vars: { n: s.waitlist.length } };

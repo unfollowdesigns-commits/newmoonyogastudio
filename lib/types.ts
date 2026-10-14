@@ -115,6 +115,7 @@ export interface MemberRow {
 
 export interface Settings {
   lateCancelHours: number;
+  bookingCutoffHours: number; // bookings close this many hours before class
   lateCancelFee: number;
   autoPromote: boolean;
 }

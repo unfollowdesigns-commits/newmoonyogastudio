@@ -33,6 +33,11 @@ export function myWaitlistPosition(s: Session, memberId: string) {
   return i === -1 ? null : i + 1;
 }
 
+// studio rule: bookings close N hours before the class starts
+export function bookingClosed(s: Session, cutoffHours: number) {
+  return new Date(s.start).getTime() - Date.now() < cutoffHours * 36e5;
+}
+
 export function isPast(s: Session) {
   return new Date(s.start).getTime() < Date.now();
 }

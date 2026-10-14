@@ -692,6 +692,19 @@ function Policies({ studio, notify, canEdit }: { studio: StudioState; notify: No
       <PageTitle title={t("settings.title")} sub={t("settings.sub")} />
       {!canEdit && <p className="mb-4 rounded-2xl bg-blush px-4 py-2.5 text-[13px] text-plum">{t("staff.ownerOnly")}</p>}
       <fieldset disabled={!canEdit} className="space-y-4 disabled:opacity-70">
+        <Row title={t("settings.cutoff")} sub={t("settings.cutoffSub")}>
+          <select
+            value={st.bookingCutoffHours}
+            onChange={(e) => notify(updateSettings(st, { bookingCutoffHours: Number(e.target.value) }))}
+            className="rounded-xl border border-stone bg-linen px-3 py-2 text-[14px]"
+          >
+            {[0, 1, 2, 4, 6, 8, 12, 24].map((h) => (
+              <option key={h} value={h}>
+                {t("settings.hours", { n: h })}
+              </option>
+            ))}
+          </select>
+        </Row>
         <Row title={t("settings.window")} sub={t("settings.windowSub")}>
           <select
             value={st.lateCancelHours}

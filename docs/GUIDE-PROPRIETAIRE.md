@@ -34,8 +34,8 @@ de la liste est inscrite automatiquement.
 - La barre de recherche trouve un nom, un numéro ou un email.
 - **Télécharger les membres (Excel)** : la liste complète, s'ouvre dans Excel ou Google Sheets.
 - **Télécharger les réservations (Excel)** : toutes les réservations des 3 derniers mois et du mois à venir.
-- **Exclure** : pour une cliente qui ne prévient pas de son absence (votre règle). Ses réservations à venir sont
-  annulées (sa place va à la liste d'attente) et elle ne peut plus réserver. **Réintégrer** annule l'exclusion.
+- **Suspendre** : pour une cliente qui ne prévient pas de son absence (votre règle). Ses réservations à venir sont
+  annulées (sa place va à la liste d'attente) et elle ne peut plus réserver. **Réactiver** lève la suspension.
 
 > Faites ces deux téléchargements **une fois par mois** et gardez-les (Google Drive par exemple) : c'est votre copie de sécurité.
 
@@ -64,11 +64,19 @@ Pour retirer un accès : **Retirer l'accès** à côté de son nom.
 
 ## 6. Les règles → onglet **Règles**
 
-- **Délai d'annulation** : 2 heures avant la séance (votre règle actuelle)
-- **Frais d'annulation tardive** : 0 DT (pas de frais : votre règle est l'exclusion en cas d'absence non signalée)
+Réglées selon votre règlement :
+
+- **Fermeture des réservations** : 8 heures avant la séance (après, la réservation est impossible dans l'appli)
+- **Délai d'annulation** : 2 heures avant la séance. Une annulation plus tardive ou une absence apparaît comme
+  « annulation tardive » / « absente » : à vous de **déduire la séance de sa carte**.
+- **Frais d'annulation tardive** : 0 DT (vous déduisez la séance de la carte au lieu de faire payer)
+- **Ateliers et événements** : annulation 24 h avant (indiqué aux clientes)
 - **Inscription auto depuis la liste d'attente** (activé conseillé)
 
-Les clientes voient ces règles dans leur profil.
+En cas d'absence non signalée ou d'annulation de dernière minute : onglet **Membres** → **Suspendre**.
+Ses réservations à venir sont annulées et elle ne peut plus réserver. **Réactiver** pour lever la suspension.
+
+Les clientes voient toutes ces règles dans leur profil.
 
 ## 7. Pleine lune et tarifs
 

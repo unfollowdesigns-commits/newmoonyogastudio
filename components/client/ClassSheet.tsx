@@ -14,6 +14,7 @@ import {
   myWaitlistPosition,
   spotsLeft,
   waitCount,
+  bookingClosed,
   type Result,
 } from "@/lib/store";
 import type { Session, StudioState } from "@/lib/types";
@@ -61,6 +62,7 @@ function Body({
   const [confirmCancel, setConfirmCancel] = useState(false);
   const past = isPast(session);
   const late = hoursUntil(session.start) < studio.settings.lateCancelHours;
+  const closed = bookingClosed(session, studio.settings.bookingCutoffHours);
 
   const act = notify;
 
@@ -165,6 +167,10 @@ function Body({
           <button className="w-full rounded-full border border-stone-deep py-4 text-[15px]" onClick={() => act(leaveWaitlist(session.id))}>
             {t("class.leaveWait")}
           </button>
+        ) : closed ? (
+          <button disabled className="w-full rounded-full bg-stone py-4 text-[15px] text-muted">
+            {t("class.bookingClosed", { h: studio.settings.bookingCutoffHours })}
+          </button>
         ) : left > 0 ? (
           <button
             className="w-full rounded-full bg-plum py-4 text-[15px] tracking-wide text-linen shadow-soft transition active:scale-[0.98]"
@@ -181,7 +187,7 @@ function Body({
           </button>
         )}
         {!past && !mine && !waitPos && (
-          <p className="mt-2 text-center text-[11.5px] text-muted">{t("class.commitment", { h: studio.settings.lateCancelHours })}</p>
+          <p className="mt-2 text-center text-[11.5px] text-muted">{t("class.commitment", { b: studio.settings.bookingCutoffHours, h: studio.settings.lateCancelHours })}</p>
         )}
       </div>
     </div>

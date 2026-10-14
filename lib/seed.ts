@@ -12,7 +12,7 @@ import type {
   WaitlistEntry,
 } from "./types";
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;
 export const SCHEDULE_DAYS = 14;
 
 export const STUDIO = {
@@ -214,7 +214,7 @@ export function createSeed(now = new Date()): StudioState {
     sessions,
     inventory,
     shifts,
-    settings: { lateCancelHours: 2, lateCancelFee: 0, autoPromote: true },
+    settings: { lateCancelHours: 2, lateCancelFee: 0, autoPromote: true, bookingCutoffHours: 8 },
     activity: [],
   };
 }

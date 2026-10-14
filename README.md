@@ -32,8 +32,8 @@ Configured in `lib/seed.ts` (`WEEK`):
 | Saturday | Yoga air | 09:00 | 1h |
 | Sunday | Yoga air | 10:00 | 1h |
 
-Capacity: 10 per class in the main studio, 4 for yoga air (4 hammocks). Booking policy: cancel at least 2h
-before a class (24h before an event); no fee, but staff can exclude a client after an unannounced absence.
+Capacity: 10 per class in the main studio, 4 for yoga air (4 hammocks). Booking policy: book at least 8h before (enforced), cancel at least 2h before (later = class deducted
+from the client's card, 24h for events); staff can suspend a client after an unannounced absence.
 The price list is shown in the client profile, and the next full moon (calculated, `lib/moon.ts`) is
 shown on the schedule with a WhatsApp booking link for the monthly full-moon event.
 

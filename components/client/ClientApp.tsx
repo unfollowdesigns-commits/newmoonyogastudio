@@ -6,7 +6,7 @@ import { LEVELS, PRICES, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib
 import { nextFullMoons } from "@/lib/moon";
 import { addDays, dayKey, formatTime, fromDayKey, startOfDay, studioHM, formatDuration } from "@/lib/date";
 import { LangToggle, useT } from "@/lib/i18n";
-import { auth, isPast, LIVE, myBooking, myWaitlistPosition, spotsLeft, useStudio, waitCount, type Result } from "@/lib/store";
+import { auth, bookingClosed, isPast, LIVE, myBooking, myWaitlistPosition, spotsLeft, useStudio, waitCount, type Result } from "@/lib/store";
 import { AuthSheet } from "../AuthSheet";
 import type { Level, Session, Style, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Chip, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
@@ -322,14 +322,14 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
           <div className="flex-1">
             <CapacityBar used={s.capacity - left} total={s.capacity} waitlist={waitCount(s)} />
           </div>
-          <Status mine={!!mine} wait={wait} left={left} waitCount={waitCount(s)} started={started} />
+          <Status mine={!!mine} wait={wait} left={left} waitCount={waitCount(s)} started={started} closed={bookingClosed(s, studio.settings.bookingCutoffHours)} />
         </div>
       </div>
     </button>
   );
 }
 
-function Status({ mine, wait, left, waitCount, started }: { mine: boolean; wait: number | null; left: number; waitCount: number; started: boolean }) {
+function Status({ mine, wait, left, waitCount, started, closed }: { mine: boolean; wait: number | null; left: number; waitCount: number; started: boolean; closed: boolean }) {
   const { t } = useT();
   if (mine)
     return (
@@ -339,6 +339,7 @@ function Status({ mine, wait, left, waitCount, started }: { mine: boolean; wait:
     );
   if (wait) return <span className="rounded-full bg-clay-soft px-2.5 py-1 text-[11.5px] text-clay">{t("card.waitlist", { n: wait })}</span>;
   if (started) return <span className="text-[11.5px] text-muted">{t("card.inSession")}</span>;
+  if (closed) return <span className="text-[11.5px] text-muted">{t("card.closed")}</span>;
   if (left === 0) return <span className="text-[11.5px] text-rose">{t("card.full", { n: waitCount })}</span>;
   if (left <= 3) return <span className="text-[11.5px] text-clay">{t("card.left", { n: left })}</span>;
   return <span className="text-[11.5px] text-muted">{t("card.open", { n: left })}</span>;
@@ -654,9 +655,11 @@ function Profile({ studio, account }: { studio: StudioState; account: { signIn: 
       <div className="mt-6 rounded-3xl bg-linen p-5 text-[13.5px] leading-relaxed text-ink/80">
         <h3 className="mb-2 font-display text-[20px] text-ink">{t("profile.policies")}</h3>
         <ul className="space-y-2">
+          <li>• {t("profile.policyBook", { b: studio.settings.bookingCutoffHours })}</li>
           <li>• {t("profile.policy1", { h: studio.settings.lateCancelHours, fee: studio.settings.lateCancelFee })}</li>
-          <li>• {t("profile.policy2")}</li>
+          <li>• {t("profile.policyEvents")}</li>
           <li>• {t("profile.policy3")}</li>
+          <li>• {t("profile.policy2")}</li>
           {studio.settings.lateCancelFee > 0 && <li>• {t("profile.policyFee", { fee: studio.settings.lateCancelFee })}</li>}
           <li>• {t("profile.policy4")}</li>
         </ul>

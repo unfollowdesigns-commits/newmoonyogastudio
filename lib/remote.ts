@@ -165,7 +165,8 @@ async function fetchAll(): Promise<StudioState> {
 
   const st = settingsQ.data as Row | null;
   const settings: Settings = {
-    lateCancelHours: (st?.late_cancel_hours as number) ?? 12,
+    lateCancelHours: (st?.late_cancel_hours as number) ?? 2,
+    bookingCutoffHours: (st?.booking_cutoff_hours as number) ?? 8,
     lateCancelFee: (st?.late_cancel_fee as number) ?? 10,
     autoPromote: (st?.auto_promote as boolean) ?? true,
   };
@@ -297,7 +298,7 @@ export const remote = {
   waiveFee: (booking: string) => call("staff_waive_fee", { p_booking: booking }),
   adjustInventory: (item: string, field: "total" | "inRepair", delta: number) => call("staff_adjust_inventory", { p_item: item, p_field: field, p_delta: delta }),
   clockToggle: () => call("staff_clock_toggle"),
-  updateSettings: (s: Settings) => call("owner_update_settings", { p_hours: s.lateCancelHours, p_fee: s.lateCancelFee, p_auto: s.autoPromote }),
+  updateSettings: (s: Settings) => call("owner_update_settings", { p_hours: s.lateCancelHours, p_fee: s.lateCancelFee, p_auto: s.autoPromote, p_cutoff: s.bookingCutoffHours }),
   setBlocked: (user: string, blocked: boolean) => call("staff_set_blocked", { p_user: user, p_blocked: blocked }),
   setRole: (email: string, role: Role, teacher: string | null) => call("owner_set_role", { p_email: email, p_role: role, p_teacher: teacher }),
 
