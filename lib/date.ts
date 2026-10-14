@@ -21,10 +21,24 @@ export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+// The studio is in Tunis: always show studio time, whatever the phone's timezone.
+export const STUDIO_TZ = "Africa/Tunis";
+const tzParts = new Intl.DateTimeFormat("en-GB", { timeZone: STUDIO_TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+export function studioHM(iso: string | Date): { h: number; m: number } {
+  const parts = tzParts.formatToParts(new Date(iso));
+  return { h: Number(parts.find((p) => p.type === "hour")!.value), m: Number(parts.find((p) => p.type === "minute")!.value) };
+}
+
+// Tunisia is UTC+1 all year (no daylight saving)
+export function studioDate(y: number, month: number, day: number, h: number, m: number): Date {
+  return new Date(Date.UTC(y, month, day, h - 1, m));
+}
+
 // French 24-hour style, as on the studio's posters: 8h30, 19h45
 export function formatTime(iso: string | Date): string {
-  const d = new Date(iso);
-  return `${d.getHours()}h${String(d.getMinutes()).padStart(2, "0")}`;
+  const { h, m } = studioHM(iso);
+  return `${h}h${String(m).padStart(2, "0")}`;
 }
 
 export function formatDayLong(d: Date | string): string {

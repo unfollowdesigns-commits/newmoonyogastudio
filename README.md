@@ -44,11 +44,22 @@ Reservations / WhatsApp: 56 775 096.
 - Calm motion: bottom sheets slide up and cards rise in. All motion respects `prefers-reduced-motion`.
 - Installable PWA manifest using the studio logo.
 
-## Data (demo mode)
+## Accounts & data
 
-State lives in `lib/store.ts` and is persisted to `localStorage`. Tabs stay in sync, so you can open `/` and `/staff` side by side and watch a booking land on the roster. The sample schedule is generated from a weekly timetable in `lib/seed.ts`. You can reset it under **Staff → Policies**.
+Two modes, picked automatically:
 
-To go to production, swap the action functions in `lib/store.ts` for API calls backed by a database (e.g. Supabase/Postgres, using a transaction or row lock on booking so capacity can't be oversold), and add real auth for members and staff.
+- **Demo** (no environment variables): sample data stored on each device, with a "Mode démo" banner.
+- **Live** (Supabase keys set in Vercel): clients create an account with an emailed 6-digit code (Google
+  sign-in optional). They give their name, WhatsApp number and consent once. Bookings, waitlists and check-ins
+  are saved in the owner's Supabase database. The capacity, late-cancel and waitlist rules run inside the
+  database (`supabase/migrations/0001_studio.sql`), so a class can never be overbooked.
+
+The staff portal is limited to accounts with the teacher, front desk or owner role. The owner manages
+everything from `/staff`. **Membres** lists every client with a WhatsApp link and an Excel export, and
+**Équipe** lets her give or remove staff access by email.
+
+- **Going live (developer):** [`docs/SETUP.md`](docs/SETUP.md)
+- **Owner's guide (French):** [`docs/GUIDE-PROPRIETAIRE.md`](docs/GUIDE-PROPRIETAIRE.md)
 
 ## Develop
 
@@ -60,4 +71,4 @@ npm run build
 
 ## Deploy to Vercel
 
-Import this repository at https://vercel.com/new. Vercel detects Next.js automatically, so you don't need any settings or environment variables.
+Import this repository at https://vercel.com/new. Vercel detects Next.js automatically. Without environment variables the site runs in demo mode; add the two Supabase variables from `.env.example` to go live (see `docs/SETUP.md`).

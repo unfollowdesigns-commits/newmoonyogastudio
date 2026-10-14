@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LEVELS, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
-import { addDays, dayKey, formatTime, fromDayKey, startOfDay } from "@/lib/date";
+import { addDays, dayKey, formatTime, fromDayKey, startOfDay, studioHM } from "@/lib/date";
 import { LangToggle, useT } from "@/lib/i18n";
-import { isPast, myBooking, myWaitlistPosition, spotsLeft, useStudio, type Result } from "@/lib/store";
+import { auth, isPast, LIVE, myBooking, myWaitlistPosition, spotsLeft, useStudio, waitCount, type Result } from "@/lib/store";
+import { AuthSheet } from "../AuthSheet";
 import type { Level, Session, Style, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Chip, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
 import { ClassSheet } from "./ClassSheet";
@@ -28,9 +29,23 @@ export default function ClientApp() {
   const { toast, show } = useToast();
   const i = useT();
   const { t } = i;
-  const notify = (r: Result) => show(i.msg(r), r.ok ? "ok" : "warn");
+  const notify = (p: Result | Promise<Result>) => void Promise.resolve(p).then((r) => show(i.msg(r), r.ok ? "ok" : "warn"));
+  const [authOpen, setAuthOpen] = useState<null | "signin" | "edit">(null);
+  const pending = useRef<(() => void) | null>(null);
+  const closeAuth = useCallback(() => setAuthOpen(null), []);
 
   if (!studio) return <Loading />;
+
+  // booking needs an account; anything else stays open to visitors
+  const requireAccount = (action: () => void) => {
+    if (studio.auth === "ready") return action();
+    pending.current = action;
+    setAuthOpen("signin");
+  };
+  const account = {
+    signIn: () => setAuthOpen("signin"),
+    edit: () => setAuthOpen("edit"),
+  };
   const open = studio.sessions.find((s) => s.id === openId) ?? null;
 
   return (
@@ -39,16 +54,22 @@ export default function ClientApp() {
         <Wordmark sub={t("brand.sub")} />
         <div className="flex items-center gap-2.5">
           <LangToggle />
-          <button onClick={() => setTab("profile")} aria-label={t("a11y.profile")}>
-            <Avatar name={studio.me.name} size={36} tone="#d9c6b0" />
+          <button onClick={() => (studio.auth === "anon" ? account.signIn() : setTab("profile"))} aria-label={t("a11y.profile")}>
+            {studio.auth === "anon" ? (
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-deep text-muted">
+                <Icon name="user" size={18} />
+              </span>
+            ) : (
+              <Avatar name={studio.me.name} size={36} tone="#d9c6b0" />
+            )}
           </button>
         </div>
       </header>
 
       <main className="flex-1 pb-28">
         {tab === "schedule" && <Schedule studio={studio} onOpen={setOpenId} />}
-        {tab === "bookings" && <Bookings studio={studio} onOpen={setOpenId} goSchedule={() => setTab("schedule")} />}
-        {tab === "profile" && <Profile studio={studio} />}
+        {tab === "bookings" && <Bookings studio={studio} onOpen={setOpenId} goSchedule={() => setTab("schedule")} signIn={account.signIn} />}
+        {tab === "profile" && <Profile studio={studio} account={account} />}
       </main>
 
       <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[460px] -translate-x-1/2 border-t border-stone/80 bg-linen/95 px-6 pt-2 pb-safe backdrop-blur-md">
@@ -75,7 +96,20 @@ export default function ClientApp() {
         </ul>
       </nav>
 
-      <ClassSheet studio={studio} session={open} onClose={() => setOpenId(null)} notify={notify} />
+      <ClassSheet studio={studio} session={open} onClose={() => setOpenId(null)} notify={notify} requireAccount={requireAccount} />
+      {LIVE && (
+        <AuthSheet
+          studio={studio}
+          open={!!authOpen}
+          editProfile={authOpen === "edit"}
+          onClose={closeAuth}
+          onDone={() => {
+            const next = pending.current;
+            pending.current = null;
+            next?.();
+          }}
+        />
+      )}
       <Toast toast={toast} />
     </div>
   );
@@ -128,7 +162,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
   return (
     <div className="animate-fade">
       <section className="px-5 pt-3">
-        <p className="text-[13px] text-muted">{i.greeting()}, {studio.me.name.split(" ")[0]}</p>
+        <p className="text-[13px] text-muted">{i.greeting()}{studio.me.firstName || (studio.mode === "demo" && studio.me.name) ? `, ${studio.me.firstName || studio.me.name.split(" ")[0]}` : ""}</p>
         <h1 className="mt-1 font-display text-[38px] leading-[1.02] font-medium">
           {t("schedule.title1")} <em className="text-plum">{t("schedule.title2")}</em>
         </h1>
@@ -240,7 +274,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
 }
 
 function timeOfDay(s: Session): TimeOfDay {
-  const h = new Date(s.start).getHours();
+  const { h } = studioHM(s.start);
   return h < 11 ? "morning" : h < 16 ? "midday" : "evening";
 }
 
@@ -277,9 +311,9 @@ function ClassCard({ studio, s, onOpen, index }: { studio: StudioState; s: Sessi
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className="flex-1">
-            <CapacityBar used={s.capacity - left} total={s.capacity} waitlist={s.waitlist.length} />
+            <CapacityBar used={s.capacity - left} total={s.capacity} waitlist={waitCount(s)} />
           </div>
-          <Status mine={!!mine} wait={wait} left={left} waitCount={s.waitlist.length} started={started} />
+          <Status mine={!!mine} wait={wait} left={left} waitCount={waitCount(s)} started={started} />
         </div>
       </div>
     </button>
@@ -459,7 +493,7 @@ function MonthSheet({
 
 /* ——————————————— My classes ——————————————— */
 
-function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen: (id: string) => void; goSchedule: () => void }) {
+function Bookings({ studio, onOpen, goSchedule, signIn }: { studio: StudioState; onOpen: (id: string) => void; goSchedule: () => void; signIn: () => void }) {
   const upcoming = studio.sessions
     .filter((s) => !isPast(s) && (myBooking(s, studio.me.id) || myWaitlistPosition(s, studio.me.id)))
     .sort((a, b) => a.start.localeCompare(b.start));
@@ -475,7 +509,15 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
       <p className="text-[13px] text-muted">{t("bookings.sub")}</p>
 
       <div className="mt-6 space-y-3">
-        {upcoming.length === 0 && (
+        {studio.auth === "anon" && (
+          <div className="rounded-3xl bg-linen px-6 py-10 text-center shadow-soft">
+            <p className="text-[14px] text-muted">{t("account.bookingsGuest")}</p>
+            <button onClick={signIn} className="mt-5 rounded-full bg-plum px-6 py-3 text-[14px] text-linen">
+              {t("account.signIn")}
+            </button>
+          </div>
+        )}
+        {studio.auth !== "anon" && upcoming.length === 0 && (
           <div className="rounded-3xl border border-dashed border-stone-deep px-6 py-12 text-center">
             <p className="font-display text-[22px]">{t("bookings.emptyTitle")}</p>
             <p className="mt-1 text-[13px] text-muted">{t("bookings.emptyBody")}</p>
@@ -533,33 +575,70 @@ function Bookings({ studio, onOpen, goSchedule }: { studio: StudioState; onOpen:
 
 /* ——————————————— Profile ——————————————— */
 
-function Profile({ studio }: { studio: StudioState }) {
-  const attended = studio.sessions.filter((s) => s.bookings.some((b) => b.memberId === studio.me.id && b.status === "checked-in")).length;
+function Profile({ studio, account }: { studio: StudioState; account: { signIn: () => void; edit: () => void } }) {
+  const attended =
+    studio.me.attended ?? studio.sessions.filter((s) => s.bookings.some((b) => b.memberId === studio.me.id && b.status === "checked-in")).length;
   const booked = studio.sessions.filter((s) => myBooking(s, studio.me.id) && !isPast(s)).length;
   const i = useT();
   const { t } = i;
-  const since = new Date(studio.me.since).toLocaleDateString(i.locale, { month: "long", year: "numeric" });
+  const since = studio.me.since ? new Date(studio.me.since).toLocaleDateString(i.locale, { month: "long", year: "numeric" }) : "";
 
   return (
     <div className="animate-fade px-5 pt-3">
-      <div className="relative overflow-hidden rounded-[28px] bg-ink p-6 text-linen shadow-lift">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-512.png" alt="" className="absolute -top-6 -right-6 h-36 w-36 rounded-full opacity-90" />
-        <div className="text-[10.5px] uppercase tracking-[0.3em] opacity-60">{t("profile.member")}</div>
-        <div className="mt-2 font-display text-[30px]">{studio.me.name}</div>
-        <div className="mt-6 flex items-end justify-between">
-          <div>
-            <div className="text-[11px] opacity-60">{t("profile.plan")}</div>
-            <div className="text-[15px]">{t(`plan.${studio.me.plan}`)}</div>
-          </div>
-          <div className="text-right text-[11px] opacity-60">{t("profile.since", { date: since })}</div>
-        </div>
-      </div>
+      {studio.mode === "demo" && <p className="mb-4 rounded-2xl bg-clay-soft px-4 py-2.5 text-center text-[12.5px] text-clay">{t("demo.banner")}</p>}
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Stat label={t("profile.upcoming")} value={booked} />
-        <Stat label={t("profile.attended")} value={attended} />
-      </div>
+      {studio.auth === "anon" ? (
+        <div className="relative overflow-hidden rounded-[28px] bg-ink p-6 text-linen shadow-lift">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-512.png" alt="" className="absolute -top-6 -right-6 h-36 w-36 rounded-full opacity-90" />
+          <div className="max-w-[70%] font-display text-[28px] leading-tight">{t("account.guestTitle")}</div>
+          <p className="mt-3 text-[13.5px] leading-relaxed opacity-80">{t("account.guestBody")}</p>
+          <button onClick={account.signIn} className="mt-5 rounded-full bg-linen px-5 py-3 text-[14px] text-ink">
+            {t("account.signIn")}
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="relative overflow-hidden rounded-[28px] bg-ink p-6 text-linen shadow-lift">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-512.png" alt="" className="absolute -top-6 -right-6 h-36 w-36 rounded-full opacity-90" />
+            <div className="text-[10.5px] uppercase tracking-[0.3em] opacity-60">{t("profile.member")}</div>
+            <div className="mt-2 max-w-[70%] font-display text-[30px] leading-tight">{studio.me.name}</div>
+            <div className="mt-6 flex items-end justify-between gap-4">
+              <div className="min-w-0 text-[12.5px] opacity-80">
+                {studio.me.plan ? (
+                  <>
+                    <div className="text-[11px] opacity-70">{t("profile.plan")}</div>
+                    <div className="text-[15px]">{t(`plan.${studio.me.plan}`)}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="truncate">{studio.me.email}</div>
+                    {studio.me.phone && <div>+216 {studio.me.phone}</div>}
+                  </>
+                )}
+              </div>
+              {since && <div className="shrink-0 text-right text-[11px] opacity-60">{t("profile.since", { date: since })}</div>}
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Stat label={t("profile.upcoming")} value={booked} />
+            <Stat label={t("profile.attended")} value={attended} />
+          </div>
+
+          {studio.mode === "live" && (
+            <div className="mt-4 flex gap-3">
+              <button onClick={account.edit} className="flex-1 rounded-full border border-stone-deep py-3 text-[13.5px]">
+                {t("account.edit")}
+              </button>
+              <button onClick={() => void auth.signOut()} className="flex-1 rounded-full border border-stone-deep py-3 text-[13.5px] text-muted">
+                {t("account.signOut")}
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       <div className="mt-6 rounded-3xl bg-linen p-5 text-[13.5px] leading-relaxed text-ink/80">
         <h3 className="mb-2 font-display text-[20px] text-ink">{t("profile.policies")}</h3>

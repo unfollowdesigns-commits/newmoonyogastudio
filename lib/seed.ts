@@ -1,4 +1,4 @@
-import { addDays, startOfDay } from "./date";
+import { addDays, startOfDay, studioDate } from "./date";
 import type {
   Booking,
   Instructor,
@@ -12,7 +12,7 @@ import type {
   WaitlistEntry,
 } from "./types";
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
 export const SCHEDULE_DAYS = 14;
 
 export const STUDIO = {
@@ -100,7 +100,7 @@ function rng(seed: number) {
   return () => (x = (x * 16807) % 2147483647) / 2147483647;
 }
 
-export const ME = { id: "me", name: "Yasmine Ben Ali", plan: "monthly", since: "2025-09-01" };
+export const ME = { id: "me", name: "Yasmine Ben Ali", plan: "monthly", since: "2025-09-01", role: "owner" as const, phone: "22 000 000", email: "yasmine@example.com" };
 
 export function createSeed(now = new Date()): StudioState {
   const today = startOfDay(now);
@@ -111,7 +111,7 @@ export function createSeed(now = new Date()): StudioState {
     const day = addDays(firstDay, d);
     const slots = WEEK[day.getDay()];
     slots.forEach((slot, i) => {
-      const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), slot.hour, slot.minute);
+      const start = studioDate(day.getFullYear(), day.getMonth(), day.getDate(), slot.hour, slot.minute);
       const room = rooms.find((r) => r.id === slot.roomId)!;
       const rand = rng(day.getDate() * 97 + day.getMonth() * 31 + i * 13 + 7);
       const fillPattern = [0.75, 1, 0.6, 0.9, 0.5, 1, 0.7];
@@ -191,6 +191,8 @@ export function createSeed(now = new Date()): StudioState {
   }
 
   return {
+    mode: "demo",
+    auth: "ready",
     version: STATE_VERSION,
     seededAt: now.toISOString(),
     me: ME,
@@ -209,8 +211,8 @@ function item(roomId: string, name: string, total: number, inRepair: number, min
 }
 
 function shift(staffId: string, day: Date, h1: number, m1: number, h2: number, m2: number): Shift {
-  const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h1, m1);
-  const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h2, m2);
+  const start = studioDate(day.getFullYear(), day.getMonth(), day.getDate(), h1, m1);
+  const end = studioDate(day.getFullYear(), day.getMonth(), day.getDate(), h2, m2);
   return { id: `${staffId}-${start.getTime()}`, staffId, start: start.toISOString(), end: end.toISOString() };
 }
 

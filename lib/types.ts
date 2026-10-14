@@ -52,6 +52,8 @@ export interface Session {
   description: string; // i18n key (desc.<key>)
   bookings: Booking[];
   waitlist: WaitlistEntry[];
+  // public counts from the database (live mode: clients only see their own bookings)
+  stats?: { booked: number; waiting: number; myPos: number | null };
 }
 
 export interface InventoryItem {
@@ -77,11 +79,37 @@ export interface ActivityEntry {
   vars?: Record<string, string | number>;
 }
 
+export type Role = "client" | "teacher" | "desk" | "owner";
+
 export interface Member {
   id: string;
   name: string;
-  plan: string; // i18n key (plan.<key>)
+  plan: string; // i18n key (plan.<key>), empty in live mode
   since: string;
+  email?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  role: Role;
+  teacherId?: string | null;
+  attended?: number; // live mode: all-time count from the database
+}
+
+// "anon" = not signed in, "incomplete" = signed in but name/WhatsApp/consent missing
+export type AuthStatus = "anon" | "incomplete" | "ready";
+
+export interface MemberRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  role: Role;
+  createdAt: string;
+  attended: number;
+  noShows: number;
+  lateCancels: number;
+  upcoming: number;
 }
 
 export interface Settings {
@@ -91,6 +119,9 @@ export interface Settings {
 }
 
 export interface StudioState {
+  mode: "demo" | "live";
+  auth: AuthStatus;
+  staff?: Instructor[]; // people who clock hours (live mode); demo uses instructors
   version: number;
   seededAt: string;
   me: Member;

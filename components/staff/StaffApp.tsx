@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { STYLE_META } from "@/lib/seed";
 import { addDays, dayKey, formatTime, startOfDay } from "@/lib/date";
 import { LangToggle, useT } from "@/lib/i18n";
@@ -19,32 +19,74 @@ import {
   toggleCheckIn,
   updateSettings,
   useStudio,
+  auth,
+  LIVE,
   type Result,
   waiveFee,
 } from "@/lib/store";
 import type { Booking, Session, StudioState } from "@/lib/types";
-import { Avatar, CapacityBar, Icon, Loading, Sheet, Toast, Wordmark, useToast } from "../ui";
+import { Avatar, CapacityBar, Icon, Loading, Logo, Sheet, Toast, Wordmark, useToast } from "../ui";
+import { AuthSheet } from "../AuthSheet";
+import { Members, Team } from "./People";
 
-type View = "classes" | "inventory" | "hours" | "settings";
-type Notify = (r: Result) => void;
+type View = "classes" | "members" | "inventory" | "hours" | "team" | "settings";
+type Notify = (r: Result | Promise<Result>) => void;
 
 export default function StaffApp() {
   const studio = useStudio();
   const [view, setView] = useState<View>("classes");
-  const [staffId, setStaffId] = useState("desk");
+  const [demoStaffId, setStaffId] = useState("desk");
+  const [authOpen, setAuthOpen] = useState(false);
+  const closeAuth = useCallback(() => setAuthOpen(false), []);
   const { toast, show } = useToast();
   const L = useT();
   const t = L.t;
-  const notify: Notify = (r) => show(L.msg(r), r.ok ? "ok" : "warn");
+  const notify: Notify = (p) => void Promise.resolve(p).then((r) => show(L.msg(r), r.ok ? "ok" : "warn"));
 
   if (!studio) return <Loading />;
-  const me = studio.instructors.find((i) => i.id === staffId)!;
+
+  // live mode: only signed-in staff get in
+  const isStaff = studio.mode === "demo" || ["teacher", "desk", "owner"].includes(studio.me.role);
+  if (!isStaff || studio.auth === "anon") {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-sand px-6 text-center">
+        <Logo size={88} />
+        <h1 className="mt-6 font-display text-[32px]">{t("staff.restricted")}</h1>
+        <p className="mt-2 max-w-sm text-[14px] text-muted">
+          {studio.auth === "anon" ? t("staff.restrictedBody") : t("staff.notStaff", { email: studio.me.email ?? "" })}
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {studio.auth === "anon" ? (
+            <button onClick={() => setAuthOpen(true)} className="rounded-full bg-plum px-6 py-3 text-[14px] text-linen">
+              {t("account.signIn")}
+            </button>
+          ) : (
+            <button onClick={() => void auth.signOut()} className="rounded-full border border-stone-deep px-6 py-3 text-[14px]">
+              {t("account.signOut")}
+            </button>
+          )}
+          <Link href="/" className="rounded-full border border-stone-deep px-6 py-3 text-[14px]">
+            {t("staff.clientApp")}
+          </Link>
+        </div>
+        <LangToggle className="mt-6" />
+        <AuthSheet studio={studio} open={authOpen} onClose={closeAuth} />
+      </div>
+    );
+  }
+
+  const live = studio.mode === "live";
+  const staffId = live ? studio.me.id : demoStaffId;
+  const teacherId = live ? (studio.me.teacherId ?? null) : demoStaffId;
+  const isOwner = !live || studio.me.role === "owner";
   const onShift = studio.shifts.some((s) => s.staffId === staffId && !s.end);
 
   const nav: [View, string, string][] = [
     ["classes", "users", t("staff.nav.classes")],
+    ["members", "user", t("staff.nav.members")],
     ["inventory", "box", t("staff.nav.inventory")],
     ["hours", "clock", t("staff.nav.hours")],
+    ...(isOwner ? ([["team", "sparkle", t("staff.nav.team")]] as [View, string, string][]) : []),
     ["settings", "settings", t("staff.nav.settings")],
   ];
 
@@ -83,13 +125,16 @@ export default function StaffApp() {
       </aside>
 
       <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
+        {!live && <p className="mb-4 rounded-2xl bg-clay-soft px-4 py-2.5 text-center text-[12.5px] text-clay">{t("demo.banner")}</p>}
         <div className="mb-5 lg:hidden">
           <StaffSwitcher studio={studio} staffId={staffId} setStaffId={setStaffId} onShift={onShift} />
         </div>
-        {view === "classes" && <Classes studio={studio} staffId={staffId} notify={notify} />}
+        {view === "classes" && <Classes studio={studio} staffId={staffId} teacherId={teacherId} notify={notify} />}
+        {view === "members" && <Members studio={studio} />}
         {view === "inventory" && <Inventory studio={studio} notify={notify} />}
-        {view === "hours" && <Hours studio={studio} me={me.id} notify={notify} />}
-        {view === "settings" && <Policies studio={studio} notify={notify} />}
+        {view === "hours" && <Hours studio={studio} me={staffId} notify={notify} />}
+        {view === "team" && isOwner && <Team studio={studio} notify={notify} />}
+        {view === "settings" && <Policies studio={studio} notify={notify} canEdit={isOwner} />}
       </main>
       <Toast toast={toast} />
     </div>
@@ -99,6 +144,25 @@ export default function StaffApp() {
 function StaffSwitcher({ studio, staffId, setStaffId, onShift }: { studio: StudioState; staffId: string; setStaffId: (s: string) => void; onShift: boolean }) {
   const L = useT();
   const t = L.t;
+  if (studio.mode === "live") {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl bg-linen p-3 shadow-soft lg:shadow-none">
+        <Avatar name={studio.me.name} size={36} />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-[14px]">{studio.me.name}</span>
+            <span className={`h-2 w-2 shrink-0 rounded-full ${onShift ? "bg-mauve" : "bg-stone-deep"}`} title={onShift ? t("staff.onShift") : t("staff.offShift")} />
+          </span>
+          <span className="block text-[11px] text-muted">
+            {t(`staff.role.${studio.me.role}`)} ·{" "}
+            <button onClick={() => void auth.signOut()} className="underline underline-offset-2">
+              {t("account.signOut")}
+            </button>
+          </span>
+        </span>
+      </div>
+    );
+  }
   const me = studio.instructors.find((i) => i.id === staffId)!;
   return (
     <label className="flex items-center gap-3 rounded-2xl bg-linen p-3 shadow-soft lg:shadow-none">
@@ -132,7 +196,7 @@ function PageTitle({ title, sub, right }: { title: string; sub?: string; right?:
 
 /* ——————————————— Classes & roster ——————————————— */
 
-function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: string; notify: Notify }) {
+function Classes({ studio, staffId, teacherId, notify }: { studio: StudioState; staffId: string; teacherId: string | null; notify: Notify }) {
   const L = useT();
   const t = L.t;
   const today = startOfDay(new Date());
@@ -140,10 +204,10 @@ function Classes({ studio, staffId, notify }: { studio: StudioState; staffId: st
   const [day, setDay] = useState(dayKey(today));
   const [mineOnly, setMineOnly] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
-  const isTeacher = studio.instructors.find((i) => i.id === staffId)?.role === "teacher";
+  const isTeacher = studio.mode === "live" ? !!teacherId : studio.instructors.find((i) => i.id === staffId)?.role === "teacher";
 
   const sessions = studio.sessions
-    .filter((s) => dayKey(s.start) === day && (!mineOnly || s.instructorId === staffId))
+    .filter((s) => dayKey(s.start) === day && (!mineOnly || s.instructorId === teacherId))
     .sort((a, b) => a.start.localeCompare(b.start));
   const open = studio.sessions.find((s) => s.id === openId) ?? null;
 
@@ -331,7 +395,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
           <div className="font-display text-[28px] leading-none">
             {active.length}/{s.capacity}
           </div>
-          <div className="text-[11px] text-muted">{left} open</div>
+          <div className="text-[11px] text-muted">{t("staff.open", { n: left })}</div>
         </div>
       </div>
 
@@ -362,7 +426,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
                 </span>
               </div>
               <button
-                onClick={() => notify(toggleCheckIn(s.id, b.id))}
+                onClick={() => notify(toggleCheckIn(s.id, b.id, b.status))}
                 aria-label={b.status === "checked-in" ? t("staff.undoCheck", { name: b.name }) : t("staff.check", { name: b.name })}
                 className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
                   b.status === "checked-in" ? "bg-plum text-linen" : "border border-stone-deep text-muted hover:border-mauve"
@@ -376,7 +440,7 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
             </div>
             {menu === b.id && (
               <div className="mt-2 ml-[44px] flex animate-rise flex-wrap gap-2">
-                <SmallBtn onClick={() => (notify(markNoShow(s.id, b.id)), setMenu(null))}>{b.status === "no-show" ? t("staff.undoNoShow") : t("staff.noShow")}</SmallBtn>
+                <SmallBtn onClick={() => (notify(markNoShow(s.id, b.id, b.status)), setMenu(null))}>{b.status === "no-show" ? t("staff.undoNoShow") : t("staff.noShow")}</SmallBtn>
                 <SmallBtn onClick={() => (notify(staffCancel(s.id, b.id, true)), setMenu(null))} danger>
                   {t("staff.lateCancel")}
                 </SmallBtn>
@@ -415,20 +479,21 @@ function Roster({ studio, s, notify }: { studio: StudioState; s: Session; notify
       {/* guest */}
       <section className="mt-6 rounded-2xl border border-stone p-4">
         <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">{t("staff.guestRes")}</h3>
-        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <div className="mt-3 grid grid-cols-2 gap-2">
           <input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder={t("staff.guestName")} className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
           <input value={guestOf} onChange={(e) => setGuestOf(e.target.value)} placeholder={t("staff.guestOf")} className="rounded-xl border border-stone bg-linen px-3 py-2.5 text-[14px] outline-none focus:border-mauve" />
           <button
             disabled={left === 0}
             onClick={() => {
-              const r = addGuest(s.id, guestName, guestOf);
-              notify(r);
-              if (r.ok) {
+              const p = addGuest(s.id, guestName, guestOf);
+              notify(p);
+              void p.then((r) => {
+                if (!r.ok) return;
                 setGuestName("");
                 setGuestOf("");
-              }
+              });
             }}
-            className="flex items-center justify-center gap-1 rounded-xl bg-plum px-4 py-2.5 text-[14px] text-linen disabled:opacity-40"
+            className="col-span-2 flex items-center justify-center gap-1 rounded-xl bg-plum px-4 py-2.5 text-[14px] text-linen disabled:opacity-40"
           >
             <Icon name="plus" size={16} /> Add
           </button>
@@ -547,10 +612,11 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
   const open = studio.shifts.find((s) => s.staffId === me && !s.end);
   const hrs = (start: string, end?: string) => ((end ? new Date(end) : new Date()).getTime() - new Date(start).getTime()) / 36e5;
 
-  const rows = studio.instructors.map((p) => {
+  const rows = (studio.staff ?? studio.instructors).map((p) => {
     const shifts = studio.shifts.filter((s) => s.staffId === p.id && new Date(s.start) >= weekStart);
     const total = shifts.reduce((a, s) => a + hrs(s.start, s.end), 0);
-    const taught = studio.sessions.filter((s) => s.instructorId === p.id && new Date(s.start) >= weekStart && new Date(s.start) < new Date()).length;
+    const teaches = (p as { teacherId?: string }).teacherId ?? p.id;
+    const taught = studio.sessions.filter((s) => s.instructorId === teaches && new Date(s.start) >= weekStart && new Date(s.start) < new Date()).length;
     return { p, total, taught, count: shifts.length };
   });
   const mine = studio.shifts.filter((s) => s.staffId === me).sort((a, b) => b.start.localeCompare(a.start)).slice(0, 6);
@@ -615,18 +681,19 @@ function Hours({ studio, me, notify }: { studio: StudioState; me: string; notify
 
 /* ——————————————— Policies ——————————————— */
 
-function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
+function Policies({ studio, notify, canEdit }: { studio: StudioState; notify: Notify; canEdit: boolean }) {
   const L = useT();
   const t = L.t;
   const st = studio.settings;
   return (
     <div className="max-w-2xl animate-fade">
       <PageTitle title={t("settings.title")} sub={t("settings.sub")} />
-      <div className="space-y-4">
+      {!canEdit && <p className="mb-4 rounded-2xl bg-blush px-4 py-2.5 text-[13px] text-plum">{t("staff.ownerOnly")}</p>}
+      <fieldset disabled={!canEdit} className="space-y-4 disabled:opacity-70">
         <Row title={t("settings.window")} sub={t("settings.windowSub")}>
           <select
             value={st.lateCancelHours}
-            onChange={(e) => notify(updateSettings({ lateCancelHours: Number(e.target.value) }))}
+            onChange={(e) => notify(updateSettings(st, { lateCancelHours: Number(e.target.value) }))}
             className="rounded-xl border border-stone bg-linen px-3 py-2 text-[14px]"
           >
             {[2, 4, 6, 8, 12, 24].map((h) => (
@@ -639,7 +706,7 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
         <Row title={t("settings.fee")} sub={t("settings.feeSub")}>
           <select
             value={st.lateCancelFee}
-            onChange={(e) => notify(updateSettings({ lateCancelFee: Number(e.target.value) }))}
+            onChange={(e) => notify(updateSettings(st, { lateCancelFee: Number(e.target.value) }))}
             className="rounded-xl border border-stone bg-linen px-3 py-2 text-[14px]"
           >
             {[0, 5, 10, 15, 20, 25].map((f) => (
@@ -653,12 +720,13 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
           <button
             role="switch"
             aria-checked={st.autoPromote}
-            onClick={() => notify(updateSettings({ autoPromote: !st.autoPromote }))}
+            onClick={() => notify(updateSettings(st, { autoPromote: !st.autoPromote }))}
             className={`relative h-7 w-12 rounded-full transition ${st.autoPromote ? "bg-plum" : "bg-stone-deep"}`}
           >
             <span className={`absolute top-1 h-5 w-5 rounded-full bg-linen transition-all ${st.autoPromote ? "left-6" : "left-1"}`} />
           </button>
         </Row>
+        {!LIVE && (
         <Row title={t("settings.reset")} sub={t("settings.resetSub")}>
           <button
             onClick={() => {
@@ -669,10 +737,11 @@ function Policies({ studio, notify }: { studio: StudioState; notify: Notify }) {
             }}
             className="rounded-full border border-rose/40 px-4 py-2 text-[13px] text-rose"
           >
-            Reset
+            {t("settings.resetBtn")}
           </button>
         </Row>
-      </div>
+        )}
+      </fieldset>
 
       {studio.activity.length > 0 && (
         <section className="mt-8">

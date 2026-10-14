@@ -13,6 +13,7 @@ import {
   myBooking,
   myWaitlistPosition,
   spotsLeft,
+  waitCount,
   type Result,
 } from "@/lib/store";
 import type { Session, StudioState } from "@/lib/types";
@@ -23,20 +24,32 @@ export function ClassSheet({
   session,
   onClose,
   notify,
+  requireAccount,
 }: {
   studio: StudioState;
   session: Session | null;
   onClose: () => void;
-  notify: (r: Result) => void;
+  notify: (r: Result | Promise<Result>) => void;
+  requireAccount: (action: () => void) => void;
 }) {
   return (
     <Sheet open={!!session} onClose={onClose} label={session?.title ?? "Class"}>
-      {session && <Body key={session.id} studio={studio} session={session} notify={notify} />}
+      {session && <Body key={session.id} studio={studio} session={session} notify={notify} requireAccount={requireAccount} />}
     </Sheet>
   );
 }
 
-function Body({ studio, session, notify }: { studio: StudioState; session: Session; notify: (r: Result) => void }) {
+function Body({
+  studio,
+  session,
+  notify,
+  requireAccount,
+}: {
+  studio: StudioState;
+  session: Session;
+  notify: (r: Result | Promise<Result>) => void;
+  requireAccount: (action: () => void) => void;
+}) {
   const i = useT();
   const { t } = i;
   const meta = STYLE_META[session.style];
@@ -155,16 +168,16 @@ function Body({ studio, session, notify }: { studio: StudioState; session: Sessi
         ) : left > 0 ? (
           <button
             className="w-full rounded-full bg-plum py-4 text-[15px] tracking-wide text-linen shadow-soft transition active:scale-[0.98]"
-            onClick={() => act(book(session.id))}
+            onClick={() => requireAccount(() => act(book(session.id)))}
           >
             {t("class.reserve")}
           </button>
         ) : (
           <button
             className="w-full rounded-full bg-clay py-4 text-[15px] tracking-wide text-linen transition active:scale-[0.98]"
-            onClick={() => act(joinWaitlist(session.id))}
+            onClick={() => requireAccount(() => act(joinWaitlist(session.id)))}
           >
-            {t("class.joinWait", { n: session.waitlist.length })}
+            {t("class.joinWait", { n: waitCount(session) })}
           </button>
         )}
       </div>
