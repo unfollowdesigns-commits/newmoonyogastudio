@@ -26,7 +26,7 @@ export default {
   timezone: "Africa/Tunis",
   utcOffset: 1,
 
-  rules: { bookingCutoffHours: 8, lateCancelHours: 2, lateCancelFee: 0, autoPromote: true },
+  rules: { bookingCutoffHours: 2, lateCancelHours: 2, lateCancelFee: 0, autoPromote: true },
   features: { fullMoon: true },
 
   prices: [
@@ -140,12 +140,16 @@ export default {
 
   text: {
     fr: {
+      "profile.policyBook": "Les réservations sont ouvertes à l'avance, au plus tard {b} h avant le début de la séance.",
+      "profile.policyEvents": "Événement pleine lune et ateliers : annulation au moins 24 h avant.",
       "profile.policy4": "Le studio ouvre 15 minutes avant le cours. Tapis, briques et bolsters sont fournis.",
       "moon.body": "Une fois par mois, un rendez-vous spécial au rythme de la lune. Places limitées — annulation au moins 24 h avant.",
       "auth.consent":
         "J'accepte que New Moon Yoga Studio conserve mes coordonnées pour gérer mes réservations et me contacter par WhatsApp. Je peux demander leur suppression à tout moment (loi n° 2004-63).",
     },
     en: {
+      "profile.policyBook": "Bookings open in advance and close {b}h before class starts.",
+      "profile.policyEvents": "Full moon event and workshops: cancel at least 24h before.",
       "profile.policy4": "Doors open 15 minutes before class. Mats, blocks and bolsters are provided.",
       "moon.body": "Once a month, a special gathering in rhythm with the moon. Limited spots — cancel at least 24h before.",
       "auth.consent":

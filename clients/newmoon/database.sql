@@ -2,7 +2,7 @@
 -- Run after supabase/schema.sql. Safe to re-run: existing rows (and rules the owner changed in the app) are kept.
 
 insert into public.settings (id, late_cancel_hours, late_cancel_fee, auto_promote, booking_cutoff_hours)
-values (1, 2, 0, true, 8)
+values (1, 2, 0, true, 2)
 on conflict (id) do nothing;
 update public.settings set timezone = 'Africa/Tunis' where id = 1;
 

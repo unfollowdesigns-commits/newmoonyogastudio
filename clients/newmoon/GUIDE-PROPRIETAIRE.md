@@ -66,7 +66,7 @@ Pour retirer un accès : **Retirer l'accès** à côté de son nom.
 
 Réglées selon votre règlement :
 
-- **Fermeture des réservations** : 8 heures avant la séance (après, la réservation est impossible dans l'appli)
+- **Fermeture des réservations** : 2 heures avant la séance (après, la réservation est impossible dans l'appli)
 - **Délai d'annulation** : 2 heures avant la séance. Une annulation plus tardive ou une absence apparaît comme
   « annulation tardive » / « absente » : à vous de **déduire la séance de sa carte**.
 - **Frais d'annulation tardive** : 0 DT (vous déduisez la séance de la carte au lieu de faire payer)

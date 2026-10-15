@@ -45,7 +45,7 @@ All in [`studio.ts`](studio.ts). Summary:
 
 - **Timetable**: Mon–Fri 19h30 (1h30) · Wed/Thu/Fri 8h30 *Yoga pour l'équilibre hormonal* with Rania (2h) · Sat 9h & Sun 10h *Yoga air* (1h)
 - **Capacity**: 10 per class, 4 for yoga air (4 hammocks)
-- **Rules**: book ≥ 8h before · cancel ≥ 2h before (else the class is deducted from the card) · events: cancel ≥ 24h · no-shows may be suspended
+- **Rules** (owner, 15/10): book up to 2h before · cancel ≥ 2h before (else the class is deducted from the card) · events: cancel ≥ 24h · no-shows may be suspended
 - **Prices**: trial 40 DT · 5 = 150 (20 days) · 10 = 280 (1 month) · 15 = 360 (2 months) · 20 = 440 (3 months) · 30 = 670 (4 months) · 50 = 990 (6 months) · unlimited 1540 (1 year). Paid at the studio.
 - **Full-moon event**: date calculated automatically each month, booking via WhatsApp
 
@@ -65,4 +65,5 @@ All in [`studio.ts`](studio.ts). Summary:
 
 | Date | What |
 |---|---|
+| 15/10/2026 | Booking cut-off 8h → 2h (owner's new rule; full-moon event keeps 24h). |
 | 15/10/2026 | Live: Supabase installed and hardened, Vercel connected, Gmail sender, owner accounts. First real booking tested (Yoga restoratif, 16/10). |
