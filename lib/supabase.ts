@@ -6,7 +6,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 // No keys → the app runs in demo mode (data stays on the device).
 export const supabase: SupabaseClient | null =
   url && key
-    ? createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } })
+    ? createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } })
     : null;
 
 export const LIVE = !!supabase;

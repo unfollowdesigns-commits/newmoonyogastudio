@@ -34,6 +34,11 @@ export default function ClientApp() {
   const [authOpen, setAuthOpen] = useState<null | "signin" | "edit">(null);
   const pending = useRef<(() => void) | null>(null);
   const closeAuth = useCallback(() => setAuthOpen(null), []);
+  // arriving from the email link with a new account: ask for name / WhatsApp right away
+  const authStatus = studio?.auth;
+  useEffect(() => {
+    if (authStatus === "incomplete") setAuthOpen((o) => o ?? "signin");
+  }, [authStatus]);
 
   if (!studio) return <Loading />;
 
