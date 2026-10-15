@@ -164,7 +164,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 create or replace function public.res(p_ok boolean, p_message text, p_vars jsonb default '{}'::jsonb) returns jsonb
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select jsonb_build_object('ok', p_ok, 'message', p_message, 'vars', p_vars)
 $$;
 
@@ -574,6 +574,17 @@ revoke insert, update, delete on public.bookings, public.waitlist, public.invent
   public.activity, public.settings, public.staff_invites from anon, authenticated;
 
 revoke execute on function public.promote_next(uuid), public.log_activity(text, jsonb), public.handle_new_user() from public, anon, authenticated;
+
+-- visitors who aren't signed in can only read the timetable and spots left
+revoke execute on function public.book_class(uuid), public.cancel_booking(uuid), public.join_waitlist(uuid), public.leave_waitlist(uuid),
+  public.staff_set_status(uuid, text), public.staff_cancel(uuid, boolean), public.staff_promote(uuid), public.staff_remove_wait(uuid),
+  public.staff_add_guest(uuid, text, text), public.staff_waive_fee(uuid), public.staff_adjust_inventory(text, text, integer),
+  public.staff_clock_toggle(), public.staff_members(), public.staff_set_blocked(uuid, boolean),
+  public.owner_update_settings(integer, integer, boolean, integer), public.owner_set_role(text, text, text),
+  public.person_name(uuid), public.active_count(uuid)
+from public, anon;
+-- internal helpers, only used inside the functions above
+revoke execute on function public.person_name(uuid), public.active_count(uuid) from authenticated;
 
 -- live updates for the staff rosters
 do $$ begin
