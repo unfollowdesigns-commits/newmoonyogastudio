@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { studio } from "@/clients";
 import { STUDIO, STYLE_META } from "@/lib/seed";
 import { endOf, formatTime, hoursUntil, formatDuration } from "@/lib/date";
 import { useT } from "@/lib/i18n";
@@ -209,14 +210,14 @@ function downloadIcs(s: Session, roomName: string) {
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//New Moon Yoga Studio//EN",
+    `PRODID:-//${STUDIO.name}//EN`,
     "BEGIN:VEVENT",
-    `UID:${s.id}@newmoon.studio`,
+    `UID:${s.id}@${studio.id}.studio`,
     `DTSTAMP:${fmt(new Date())}`,
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(endOf(s.start, s.durationMin))}`,
-    `SUMMARY:${s.title} · New Moon`,
-    `LOCATION:New Moon Yoga Studio — ${roomName}`,
+    `SUMMARY:${s.title} · ${studio.shortName}`,
+    `LOCATION:${STUDIO.name} — ${roomName}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LEVELS, PRICES, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
+import { FEATURES, LEVELS, PHONE_PREFIX, PRICES, SCHEDULE_DAYS, STUDIO, STYLES, STYLE_META } from "@/lib/seed";
 import { nextFullMoons } from "@/lib/moon";
-import { addDays, dayKey, formatTime, fromDayKey, startOfDay, studioHM, formatDuration } from "@/lib/date";
+import { addDays, dayKey, formatTime, fromDayKey, startOfDay, studioHM, formatDuration, STUDIO_TZ } from "@/lib/date";
 import { LangToggle, useT } from "@/lib/i18n";
 import { auth, bookingClosed, isPast, LIVE, myBooking, myWaitlistPosition, spotsLeft, useStudio, waitCount, type Result } from "@/lib/store";
 import { AuthSheet } from "../AuthSheet";
@@ -191,7 +191,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
         </button>
       )}
 
-      <MoonCard />
+      {FEATURES.fullMoon && <MoonCard />}
 
       {/* date strip */}
       <section className="mt-6">
@@ -220,7 +220,7 @@ function Schedule({ studio, onOpen }: { studio: StudioState; onOpen: (id: string
                 </span>
                 <span className="relative mt-0.5 font-display text-[22px] leading-none">
                   {d.getDate()}
-                  {moonDays.has(k) && (
+                  {FEATURES.fullMoon && moonDays.has(k) && (
                     <span className="absolute -top-1 -right-2.5 h-2 w-2 rounded-full bg-clay ring-2 ring-linen" title={t("moon.badge")} />
                   )}
                 </span>
@@ -629,7 +629,7 @@ function Profile({ studio, account }: { studio: StudioState; account: { signIn: 
                 ) : (
                   <>
                     <div className="truncate">{studio.me.email}</div>
-                    {studio.me.phone && <div>+216 {studio.me.phone}</div>}
+                    {studio.me.phone && <div>+{PHONE_PREFIX} {studio.me.phone}</div>}
                   </>
                 )}
               </div>
@@ -675,7 +675,7 @@ function Profile({ studio, account }: { studio: StudioState; account: { signIn: 
         <a href={STUDIO.maps} target="_blank" rel="noreferrer" className="mt-2 flex items-start gap-2 text-[13.5px] text-muted">
           <Icon name="pin" size={18} className="mt-0.5 shrink-0 text-plum" />
           <span>
-            <span className="block text-ink">New Moon Yoga Studio</span>
+            <span className="block text-ink">{STUDIO.name}</span>
             {STUDIO.address}, {STUDIO.area}
           </span>
         </a>
@@ -718,7 +718,7 @@ function MoonCard() {
   const i = useT();
   const { t } = i;
   const [moon] = useState(() => nextFullMoons(new Date(Date.now() - 12 * 36e5), 1)[0]);
-  const date = moon.toLocaleDateString(i.locale, { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Tunis" });
+  const date = moon.toLocaleDateString(i.locale, { weekday: "long", day: "numeric", month: "long", timeZone: STUDIO_TZ });
   const days = Math.round((startOfDay(moon).getTime() - startOfDay(new Date()).getTime()) / 864e5);
   const when = days <= 0 ? t("moon.today") : days === 1 ? t("moon.tomorrow") : t("moon.inDays", { n: days });
   const wa = `${STUDIO.whatsapp}?text=${encodeURIComponent(t("moon.waText", { date }))}`;

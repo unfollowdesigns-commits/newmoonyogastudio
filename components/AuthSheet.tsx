@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
+import { PHONE_PREFIX } from "@/lib/seed";
 import { auth } from "@/lib/store";
 import { GOOGLE_AUTH } from "@/lib/supabase";
 import type { StudioState } from "@/lib/types";
@@ -180,7 +181,7 @@ function ProfileForm({ studio, onSaved }: { studio: StudioState; onSaved?: () =>
       </div>
       <Field label={t("auth.phone")}>
         <div className="flex items-center rounded-xl border border-stone bg-linen focus-within:border-mauve">
-          <span className="pl-3 text-[14px] text-muted">+216</span>
+          <span className="pl-3 text-[14px] text-muted">+{PHONE_PREFIX}</span>
           <input
             type="tel"
             inputMode="tel"

@@ -1,13 +1,14 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { studio } from "@/clients";
 import { createSeed, STATE_VERSION } from "./seed";
 import { hoursUntil } from "./date";
 import type { MemberRow, Session, Settings, StudioState } from "./types";
 import type { Result } from "./store";
 import { activeBookings, bookingClosed, isPast, myBooking, myWaitlistPosition, spotsLeft, takenSpots } from "./helpers";
 
-const KEY = "newmoon-studio-v" + STATE_VERSION;
+const KEY = `${studio.id}-studio-v${STATE_VERSION}`;
 const STALE_MS = 3 * 24 * 3600e3;
 
 let state: StudioState | null = null;

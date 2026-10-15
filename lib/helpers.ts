@@ -1,3 +1,4 @@
+import { studio } from "@/clients";
 import type { Booking, Session } from "./types";
 
 export const HOLDS_SPOT = (b: Booking) => b.status === "booked" || b.status === "checked-in" || b.status === "no-show";
@@ -42,9 +43,9 @@ export function isPast(s: Session) {
   return new Date(s.start).getTime() < Date.now();
 }
 
-// Tunisian numbers are 8 digits; WhatsApp needs the +216 prefix
+// local numbers (8 digits in Tunisia) get the studio's country code for WhatsApp
 export function whatsappLink(phone: string) {
   let d = phone.replace(/\D/g, "");
-  if (d.length === 8) d = "216" + d;
+  if (d.length === 8) d = studio.phonePrefix + d;
   return d ? `https://wa.me/${d}` : "";
 }

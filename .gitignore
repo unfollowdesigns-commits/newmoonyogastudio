@@ -5,3 +5,8 @@ out
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# copied from clients/<id>/brand by scripts/use-client.mjs
+/public/*.png
+/app/icon.png
+/app/apple-icon.png

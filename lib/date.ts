@@ -1,3 +1,5 @@
+import { studio } from "@/clients";
+
 export function dayKey(d: Date | string): string {
   const date = typeof d === "string" ? new Date(d) : d;
   const y = date.getFullYear();
@@ -21,8 +23,8 @@ export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-// The studio is in Tunis: always show studio time, whatever the phone's timezone.
-export const STUDIO_TZ = "Africa/Tunis";
+// Always show studio time, whatever the phone's timezone.
+export const STUDIO_TZ = studio.timezone;
 const tzParts = new Intl.DateTimeFormat("en-GB", { timeZone: STUDIO_TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 export function studioHM(iso: string | Date): { h: number; m: number } {
@@ -30,9 +32,9 @@ export function studioHM(iso: string | Date): { h: number; m: number } {
   return { h: Number(parts.find((p) => p.type === "hour")!.value), m: Number(parts.find((p) => p.type === "minute")!.value) };
 }
 
-// Tunisia is UTC+1 all year (no daylight saving)
+// fixed offset from the studio file (Tunisia: UTC+1 all year, no daylight saving)
 export function studioDate(y: number, month: number, day: number, h: number, m: number): Date {
-  return new Date(Date.UTC(y, month, day, h - 1, m));
+  return new Date(Date.UTC(y, month, day, h - studio.utcOffset, m));
 }
 
 // 60 → "1h", 90 → "1h30", 120 → "2h"

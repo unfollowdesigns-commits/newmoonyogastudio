@@ -3,10 +3,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Instructor } from "@/lib/types";
 import { useT } from "@/lib/i18n";
+import { studio } from "@/clients";
 
 export function Logo({ size = 28 }: { size?: number }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/logo-512.png" width={size} height={size} alt="New Moon Yoga Studio" className="shrink-0 rounded-full shadow-soft" />;
+  return <img src="/logo-512.png" width={size} height={size} alt={studio.name} className="shrink-0 rounded-full shadow-soft" />;
 }
 
 export function Wordmark({ sub }: { sub?: string }) {
@@ -14,8 +15,8 @@ export function Wordmark({ sub }: { sub?: string }) {
     <div className="flex items-center gap-2.5">
       <Logo size={42} />
       <div className="leading-none">
-        <div className="font-display text-[22px] font-medium tracking-wide">New Moon</div>
-        <div className="mt-0.5 text-[9.5px] uppercase tracking-[0.32em] text-muted">{sub ?? "Yoga Studio"}</div>
+        <div className="font-display text-[22px] font-medium tracking-wide">{studio.shortName}</div>
+        <div className="mt-0.5 text-[9.5px] uppercase tracking-[0.32em] text-muted">{sub ?? studio.tagline.en}</div>
       </div>
     </div>
   );

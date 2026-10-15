@@ -1,5 +1,7 @@
-export type Style = "Anti-stress" | "Back care" | "Beginner+" | "Restorative" | "Aerial" | "Women's yoga";
-export type Level = "All Levels" | "Beginner" | "Intermediate" | "Advanced";
+// class family key, defined per studio in clients/<id>/studio.ts
+export type Style = string;
+import type { Level } from "@/clients/types";
+export type { Level };
 
 export type BookingStatus = "booked" | "checked-in" | "no-show" | "cancelled" | "late-cancel";
 

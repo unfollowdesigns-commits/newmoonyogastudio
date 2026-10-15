@@ -1,5 +1,6 @@
--- New Moon Yoga Studio — full database setup.
--- Run once in Supabase → SQL Editor (or `supabase db push`). Safe to re-run.
+-- Studio booking app — database setup, shared by every studio.
+-- Run once in the studio's Supabase → SQL Editor, then run clients/<id>/database.sql
+-- (the studio's own timetable, rooms and rules). Both are safe to re-run.
 --
 -- Data map (where everything lands):
 --   profiles     one row per person who signed up (name, WhatsApp, email, role)
@@ -117,6 +118,8 @@ create table if not exists public.settings (
 );
 -- studio rule: bookings close 8 hours before a class
 alter table public.settings add column if not exists booking_cutoff_hours int not null default 8;
+-- the studio's timezone; classes are generated in local time
+alter table public.settings add column if not exists timezone text not null default 'Africa/Tunis';
 
 create table if not exists public.inventory (
   id text primary key,
@@ -203,16 +206,16 @@ create trigger on_auth_user_created after insert on auth.users
 -- creates dated classes for the next p_days days from the weekly timetable (idempotent)
 create or replace function public.ensure_sessions(p_days int default 14) returns int
 language plpgsql security definer set search_path = public as $$
-declare n int;
+declare n int; tz text := coalesce((select timezone from settings where id = 1), 'UTC');
 begin
   insert into sessions (slot_id, title, style, level, teacher_id, room_id, starts_at, duration_min, capacity, desc_key)
   select w.id, w.title, w.style, w.level, w.teacher_id, w.room_id,
-         ((d::date + w.start_time) at time zone 'Africa/Tunis'),
+         ((d::date + w.start_time) at time zone tz),
          w.duration_min, coalesce(w.capacity, r.capacity), w.desc_key
   from weekly_slots w
   join rooms r on r.id = w.room_id
-  cross join generate_series((now() at time zone 'Africa/Tunis')::date,
-                             (now() at time zone 'Africa/Tunis')::date + least(greatest(p_days, 1), 31), interval '1 day') d
+  cross join generate_series((now() at time zone tz)::date,
+                             (now() at time zone tz)::date + least(greatest(p_days, 1), 31), interval '1 day') d
   where w.active and extract(dow from d) = w.weekday
   on conflict (slot_id, starts_at) do nothing;
   get diagnostics n = row_count;
@@ -593,45 +596,3 @@ do $$ begin
     begin alter publication supabase_realtime add table public.waitlist; exception when duplicate_object then null; end;
   end if;
 end $$;
-
--- ───────────────────────── studio data ─────────────────────────
-
-insert into public.settings (id) values (1) on conflict do nothing;
-
-insert into public.teachers (id, name, tone, sort) values
-  ('rania', 'Rania Sam', '#ead3c6', 1),
-  ('team', 'New Moon Team', '#e4dbd8', 2)
-on conflict (id) do nothing;
-
-insert into public.rooms (id, capacity, cols, unit) values
-  ('studio', 10, 5, 'mat'),
-  ('aerial', 4, 4, 'hammock')
-on conflict (id) do nothing;
-
-insert into public.weekly_slots (id, weekday, start_time, title, style, level, teacher_id, room_id, duration_min, desc_key) values
-  (1, 1, '19:30', 'Yoga anti stress', 'Anti-stress', 'All Levels', 'team', 'studio', 90, 'stress'),
-  (2, 2, '19:30', 'Yoga pour le dos', 'Back care', 'All Levels', 'team', 'studio', 90, 'dos'),
-  (3, 3, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
-  (4, 3, '19:30', 'Yoga débutant +', 'Beginner+', 'Beginner', 'team', 'studio', 90, 'debutant'),
-  (5, 4, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
-  (6, 4, '19:30', 'Yoga santé colonne vertébrale', 'Back care', 'All Levels', 'team', 'studio', 90, 'colonne'),
-  (7, 5, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
-  (8, 5, '19:30', 'Yoga restoratif', 'Restorative', 'All Levels', 'team', 'studio', 90, 'restoratif'),
-  (9, 6, '09:00', 'Yoga air', 'Aerial', 'All Levels', 'team', 'aerial', 60, 'air'),
-  (10, 0, '10:00', 'Yoga air', 'Aerial', 'All Levels', 'team', 'aerial', 60, 'air')
-on conflict (id) do nothing;
-select setval(pg_get_serial_sequence('public.weekly_slots', 'id'), greatest((select max(id) from public.weekly_slots), 1));
-
-insert into public.inventory (id, room_id, name, total, in_repair, minimum) values
-  ('studio-mats', 'studio', 'Yoga mats', 12, 0, 10),
-  ('studio-blocks', 'studio', 'Cork blocks', 20, 0, 20),
-  ('studio-straps', 'studio', 'Straps', 10, 0, 10),
-  ('studio-bolsters', 'studio', 'Bolsters', 10, 0, 10),
-  ('studio-blankets', 'studio', 'Blankets', 12, 0, 10),
-  ('studio-bowls', 'studio', 'Singing bowls', 3, 0, 2),
-  ('aerial-hammocks', 'aerial', 'Aerial hammocks', 4, 0, 4),
-  ('aerial-rigging', 'aerial', 'Rigging sets (carabiners, daisy chains)', 4, 0, 4),
-  ('aerial-crash', 'aerial', 'Crash mats', 4, 0, 4)
-on conflict (id) do nothing;
-
-select public.ensure_sessions(14);

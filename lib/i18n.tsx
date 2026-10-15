@@ -1,7 +1,10 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { studio } from "@/clients";
 import type { Instructor, InventoryItem, Level, Room, Session, Style } from "./types";
+
+const TEACHERS = Object.fromEntries(studio.teachers.map((t) => [t.id, t]));
 
 export type Lang = "fr" | "en";
 export const LANGS: Lang[] = ["fr", "en"];
@@ -273,7 +276,7 @@ const fr = {
   "auth.firstName": "Prénom",
   "auth.lastName": "Nom",
   "auth.phone": "Numéro WhatsApp",
-  "auth.consent": "J'accepte que New Moon Yoga Studio conserve mes coordonnées pour gérer mes réservations et me contacter par WhatsApp. Je peux demander leur suppression à tout moment (loi n° 2004-63).",
+  "auth.consent": "J'accepte que {studio} conserve mes coordonnées pour gérer mes réservations et me contacter par WhatsApp. Je peux demander leur suppression à tout moment.",
   "auth.needName": "Indiquez votre prénom et votre nom.",
   "auth.needPhone": "Indiquez un numéro WhatsApp à 8 chiffres.",
   "auth.needConsent": "Merci de cocher la case d'accord pour continuer.",
@@ -282,7 +285,7 @@ const fr = {
   "account.signIn": "Se connecter / Créer un compte",
   "account.signOut": "Se déconnecter",
   "account.edit": "Modifier mes informations",
-  "account.guestTitle": "Votre espace New Moon",
+  "account.guestTitle": "Votre espace {studioShort}",
   "account.guestBody": "Créez votre compte pour réserver vos cours, rejoindre les listes d'attente et retrouver votre historique.",
   "account.bookingsGuest": "Connectez-vous pour voir vos réservations.",
   "demo.banner": "Mode démo — les données restent sur cet appareil.",
@@ -338,8 +341,8 @@ const fr = {
   "msg.cancelLateNoFee": "Annulé. Annulation tardive : la séance est déduite de votre carte.",
   "class.lateWarnNoFee": "Moins de {h} h avant la séance : cette séance sera déduite de votre carte.",
   "class.commitment": "Réservation jusqu'à {b} h avant · annulation jusqu'à {h} h avant",
+  "profile.policy4": "Arrivez quelques minutes avant le début du cours.",
   "profile.policyFee": "Frais d'annulation tardive : {fee} DT.",
-  "profile.policy4": "Le studio ouvre 15 minutes avant le cours. Tapis, briques et bolsters sont fournis.",
   "staff.lateSubNoFee": "Moins de {h} h avant la séance",
   "profile.prices": "Tarifs",
   "profile.pricesNote": "Renseignements et achat des formules auprès du studio.",
@@ -351,8 +354,8 @@ const fr = {
   "validity.months": "valable {n} mois",
   "validity.year": "valable 1 an",
   "moon.title": "Événement pleine lune",
+  "moon.body": "Une fois par mois, un rendez-vous spécial au rythme de la lune. Places limitées.",
   "moon.date": "Pleine lune : {date}",
-  "moon.body": "Une fois par mois, un rendez-vous spécial au rythme de la lune. Places limitées — annulation au moins 24 h avant.",
   "moon.cta": "Réserver sur WhatsApp",
   "moon.waText": "Bonjour, je souhaite réserver pour l'événement pleine lune du {date}.",
   "moon.inDays": "dans {n} jours",
@@ -371,42 +374,14 @@ const fr = {
   "profile.directions": "Itinéraire",
 
   // data labels
-  "style.Women's yoga": "Yoga féminin",
-  "style.Anti-stress": "Anti-stress",
-  "style.Back care": "Dos & colonne",
-  "style.Beginner+": "Débutant +",
-  "style.Restorative": "Restoratif",
-  "style.Aerial": "Yoga aérien",
   "level.All Levels": "Tous niveaux",
   "level.Beginner": "Débutant",
   "level.Intermediate": "Intermédiaire",
   "level.Advanced": "Avancé",
-  "room.studio": "Studio principal",
-  "room.aerial": "Studio aérien",
   "unit.mat": "tapis",
   "unit.hammock": "hamacs",
-  "person.team": "Équipe New Moon",
   "person.desk": "Accueil",
-  "bio.rania": "Professeure certifiée en yoga féminin. Elle guide le cycle équilibre hormonal.",
-  "bio.team": "Cours donné par l'équipe de professeurs du New Moon Yoga Studio.",
   "bio.desk": "Réservations et gestion du studio.",
-  "desc.hormonal":
-    "Une pratique au féminin pour l'équilibre des hormones, le soulagement des symptômes de la périménopause et de la ménopause, la régulation du cycle et des douleurs menstruelles — guérir le féminin sacré.",
-  "desc.stress": "Mouvements lents guidés par le souffle et relaxation profonde pour relâcher les tensions et apaiser le mental après la journée.",
-  "desc.dos": "Mobilité douce et renforcement pour soulager les douleurs de dos et améliorer la posture.",
-  "desc.debutant": "Apprenez les bases pas à pas — postures, alignement et respiration — puis allez un peu plus loin chaque semaine.",
-  "desc.colonne": "Une pratique dédiée à une colonne saine et souple : étirements, torsions et gainage.",
-  "desc.restoratif": "Postures entièrement soutenues, tenues plusieurs minutes, pour calmer le système nerveux et retrouver de l'énergie.",
-  "desc.air": "Yoga aérien dans un hamac suspendu — décompressez la colonne, gagnez en force et osez les inversions en toute sécurité.",
-  "inv.Yoga mats": "Tapis de yoga",
-  "inv.Cork blocks": "Briques en liège",
-  "inv.Straps": "Sangles",
-  "inv.Bolsters": "Bolsters",
-  "inv.Blankets": "Couvertures",
-  "inv.Singing bowls": "Bols chantants",
-  "inv.Aerial hammocks": "Hamacs aériens",
-  "inv.Rigging sets (carabiners, daisy chains)": "Kits d'accroche (mousquetons, chaînes)",
-  "inv.Crash mats": "Tapis de réception",
 };
 
 type Key = keyof typeof fr;
@@ -666,7 +641,7 @@ const en: Record<Key, string> = {
   "auth.firstName": "First name",
   "auth.lastName": "Last name",
   "auth.phone": "WhatsApp number",
-  "auth.consent": "I agree that New Moon Yoga Studio keeps my contact details to manage my bookings and contact me on WhatsApp. I can ask for them to be deleted at any time (Law no. 2004-63).",
+  "auth.consent": "I agree that {studio} keeps my contact details to manage my bookings and contact me on WhatsApp. I can ask for them to be deleted at any time.",
   "auth.needName": "Please enter your first and last name.",
   "auth.needPhone": "Please enter an 8-digit WhatsApp number.",
   "auth.needConsent": "Please tick the consent box to continue.",
@@ -675,7 +650,7 @@ const en: Record<Key, string> = {
   "account.signIn": "Sign in / Create account",
   "account.signOut": "Sign out",
   "account.edit": "Edit my details",
-  "account.guestTitle": "Your New Moon space",
+  "account.guestTitle": "Your {studioShort} space",
   "account.guestBody": "Create your account to book classes, join waitlists and see your history.",
   "account.bookingsGuest": "Sign in to see your bookings.",
   "demo.banner": "Demo mode — data stays on this device.",
@@ -731,8 +706,8 @@ const en: Record<Key, string> = {
   "msg.cancelLateNoFee": "Cancelled. Late cancellation: the class is deducted from your card.",
   "class.lateWarnNoFee": "Less than {h}h before class: this class will be deducted from your card.",
   "class.commitment": "Book up to {b}h before · cancel up to {h}h before",
+  "profile.policy4": "Please arrive a few minutes before class starts.",
   "profile.policyFee": "Late cancellation fee: {fee} DT.",
-  "profile.policy4": "Doors open 15 minutes before class. Mats, blocks and bolsters are provided.",
   "staff.lateSubNoFee": "Within {h}h of class",
   "profile.prices": "Prices",
   "profile.pricesNote": "Ask the studio to buy a pass.",
@@ -744,8 +719,8 @@ const en: Record<Key, string> = {
   "validity.months": "valid {n} months",
   "validity.year": "valid 1 year",
   "moon.title": "Full moon event",
+  "moon.body": "Once a month, a special gathering in rhythm with the moon. Limited spots.",
   "moon.date": "Full moon: {date}",
-  "moon.body": "Once a month, a special gathering in rhythm with the moon. Limited spots — cancel at least 24h before.",
   "moon.cta": "Book on WhatsApp",
   "moon.waText": "Hello, I'd like to book the full moon event on {date}.",
   "moon.inDays": "in {n} days",
@@ -760,42 +735,14 @@ const en: Record<Key, string> = {
   "settings.cutoff": "Booking cut-off",
   "settings.cutoffSub": "No new bookings within this time before class.",
   "profile.directions": "Directions",
-  "style.Women's yoga": "Women's yoga",
-  "style.Anti-stress": "Anti-stress",
-  "style.Back care": "Back care",
-  "style.Beginner+": "Beginner+",
-  "style.Restorative": "Restorative",
-  "style.Aerial": "Aerial",
   "level.All Levels": "All levels",
   "level.Beginner": "Beginner",
   "level.Intermediate": "Intermediate",
   "level.Advanced": "Advanced",
-  "room.studio": "Main Studio",
-  "room.aerial": "Aerial Studio",
   "unit.mat": "mats",
   "unit.hammock": "hammocks",
-  "person.team": "New Moon Team",
   "person.desk": "Front Desk",
-  "bio.rania": "Professeure certifiée en yoga féminin. Guides the hormonal balance series.",
-  "bio.team": "Taught by the New Moon Yoga Studio teaching team.",
   "bio.desk": "Reservations & studio management.",
-  "desc.hormonal":
-    "A women's practice to balance hormones, ease the symptoms of perimenopause and menopause, regulate the cycle and soothe menstrual pain — healing the sacred feminine.",
-  "desc.stress": "Slow breath-led movement and deep relaxation to release tension and quiet the mind after the day.",
-  "desc.dos": "Gentle mobility and strengthening to relieve back pain and improve posture.",
-  "desc.debutant": "Learn the foundations step by step — postures, alignment and breathing — then go a little further each week.",
-  "desc.colonne": "A practice dedicated to a healthy, supple spine: lengthening, twists and core support.",
-  "desc.restoratif": "Fully supported postures held for several minutes to calm the nervous system and restore energy.",
-  "desc.air": "Aerial yoga in a suspended hammock — decompress the spine, build strength and play with inversions safely.",
-  "inv.Yoga mats": "Yoga mats",
-  "inv.Cork blocks": "Cork blocks",
-  "inv.Straps": "Straps",
-  "inv.Bolsters": "Bolsters",
-  "inv.Blankets": "Blankets",
-  "inv.Singing bowls": "Singing bowls",
-  "inv.Aerial hammocks": "Aerial hammocks",
-  "inv.Rigging sets (carabiners, daisy chains)": "Rigging sets (carabiners, daisy chains)",
-  "inv.Crash mats": "Crash mats",
 };
 
 const DICTS: Record<Lang, Record<string, string>> = { fr, en };
@@ -803,7 +750,7 @@ export const LOCALES: Record<Lang, string> = { fr: "fr-FR", en: "en-GB" };
 
 // ——— language preference (per device) ———
 
-const KEY = "newmoon-lang";
+const KEY = `${studio.id}-lang`;
 const listeners = new Set<() => void>();
 let current: Lang | null = null;
 
@@ -833,9 +780,15 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
+const STUDIO_TEXT: Partial<Record<Lang, Record<string, string>>> = {
+  fr: { "brand.sub": studio.tagline.fr, ...studio.text?.fr },
+  en: { "brand.sub": studio.tagline.en, ...studio.text?.en },
+};
+const STUDIO_VARS: Vars = { studio: studio.name, studioShort: studio.shortName, currency: studio.currency };
+
 export function translate(lang: Lang, key: string, vars?: Vars): string {
-  let s = DICTS[lang][key] ?? DICTS.fr[key] ?? key;
-  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
+  let s = STUDIO_TEXT[lang]?.[key] ?? DICTS[lang][key] ?? STUDIO_TEXT.fr?.[key] ?? DICTS.fr[key] ?? key;
+  for (const [k, v] of Object.entries({ ...STUDIO_VARS, ...vars })) s = s.split(`{${k}}`).join(String(v));
   return s;
 }
 
@@ -850,14 +803,15 @@ export function useT() {
     locale,
     setLang,
     t,
-    style: (s: Style) => t(`style.${s}`),
+    // studio data (clients/<id>/studio.ts) carries its own fr/en labels
+    style: (s: Style) => studio.styles[s]?.label[lang] ?? s,
     level: (l: Level) => t(`level.${l}`),
-    room: (r: Room) => t(`room.${r.id}`),
+    room: (r: Room) => studio.rooms.find((x) => x.id === r.id)?.label[lang] ?? r.name,
     unit: (r: Room) => t(`unit.${r.unit}`),
-    person: (p: Instructor) => (p.id === "team" || p.id === "desk" ? t(`person.${p.id}`) : p.name),
-    bio: (p: Instructor) => t(`bio.${p.id}`),
-    desc: (s: Session) => t(`desc.${s.description}`),
-    item: (i: InventoryItem) => t(`inv.${i.name}`),
+    person: (p: Instructor) => (p.id === "desk" ? t("person.desk") : (TEACHERS[p.id]?.label?.[lang] ?? p.name)),
+    bio: (p: Instructor) => (p.id === "desk" ? t("bio.desk") : (TEACHERS[p.id]?.bio[lang] ?? p.bio)),
+    desc: (s: Session) => studio.classes[s.description]?.[lang] ?? "",
+    item: (i: InventoryItem) => studio.inventory.find((x) => x.name === i.name)?.label[lang] ?? i.name,
     // translate a store Result
     msg: (r: { message: string; vars?: Vars }) =>
       r.message ? t(r.message === "msg.cancelLate" && !Number(r.vars?.fee) ? "msg.cancelLateNoFee" : r.message, r.vars) + (r.vars?.promoted ? t("msg.promotedToo", { promoted: r.vars.promoted }) : "") : "",

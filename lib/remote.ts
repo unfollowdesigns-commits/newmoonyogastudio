@@ -232,7 +232,7 @@ export function refresh(): Promise<void> {
       state = s;
       emit();
     })
-    .catch((e) => console.error("New Moon: could not load data", e))
+    .catch((e) => console.error("Could not load studio data", e))
     .finally(() => {
       loading = null;
     });

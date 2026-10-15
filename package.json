@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "predev": "node scripts/use-client.mjs",
+    "prebuild": "node scripts/use-client.mjs",
+    "client:sql": "node --no-warnings --experimental-strip-types scripts/client-sql.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
