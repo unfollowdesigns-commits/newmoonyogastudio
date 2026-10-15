@@ -100,7 +100,7 @@ She refreshes — every tab appears. Teachers and front desk: she adds them hers
 ## 7. Hand over
 
 - [ ] Send `GUIDE-PROPRIETAIRE.md` as PDF on WhatsApp
-- [ ] QR code for the desk / Instagram (see `clients/newmoon/qr/` for the style)
+- [ ] QR code: `python3 scripts/make-qr.py <app url> clients/<id>/brand/logo-512.png clients/<id>/qr/qr-code.svg` — desk card + Instagram story in the same style as `clients/newmoon/qr/`
 - [ ] Home-screen shortcut on the owner's phone (Share → Add to Home Screen) for `/staff`
 - [ ] Fill the client sheet `clients/<id>/README.md`, status 🟢
 
