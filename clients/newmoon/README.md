@@ -59,6 +59,7 @@ All in [`studio.ts`](studio.ts). Summary:
 ## Handover pack
 
 - [`GUIDE-PROPRIETAIRE.md`](GUIDE-PROPRIETAIRE.md) — owner's guide in French (send as PDF on WhatsApp)
+- [`marketing/content-calendar.md`](marketing/content-calendar.md) — Instagram content engine (calendar, captions, filming list)
 - [`qr/`](qr) — QR code (PNG + SVG for print), desk card A6 (PNG + PDF, 300 dpi), Instagram story. Tested to scan; opens https://newmoonyogastudio.vercel.app
 
 ## Change log
