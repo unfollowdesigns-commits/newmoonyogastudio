@@ -1,0 +1,182 @@
+<title>Plan marketing New Moon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap">
+<style>
+/* Layout: a calm letter-like column in the studio's colours; three month bands and a simple weekly table */
+:root {
+  --bg: #f5f0ec; --surface: #fcf9f7; --line: #e6dcd6; --fg: #2f2a2c; --muted: #85797b;
+  --plum: #6d5260; --mauve: #b39aa3; --blush: #f3e6e6; --clay: #b57f62;
+  --display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --body: "Jost", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1f1a1d; --surface: #2a2327; --line: #3d3338; --fg: #f1e9e6; --muted: #b0a2a5;
+  --plum: #d3b4c3; --mauve: #9c8590; --blush: #3a2c33; --clay: #d79e80; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1f1a1d; --surface: #2a2327; --line: #3d3338; --fg: #f1e9e6; --muted: #b0a2a5;
+  --plum: #d3b4c3; --mauve: #9c8590; --blush: #3a2c33; --clay: #d79e80; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.65; font-weight: 400;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 80px }
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 52px }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; line-height: 1.1; margin: 0; text-wrap: balance }
+h1 { font-size: clamp(40px, 8vw, 60px) }
+h1 i { font-weight: 400; color: var(--plum) }
+h2 { font-size: 32px }
+h3 { font-size: 22px }
+p { margin: 0 }
+.eyebrow { font-size: 11.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted) }
+.lede { font-size: 18px; color: var(--muted) }
+section { display: grid; gap: 18px }
+.small { font-size: 14px; color: var(--muted) }
+.moons { display: flex; gap: 9px }
+.moons svg { width: 16px; height: 16px }
+
+.goal { background: var(--plum); color: var(--surface); border-radius: 22px; padding: 26px; display: grid; gap: 12px }
+.goal h2 { color: var(--surface) }
+.goal ul { margin: 0; padding-left: 20px; display: grid; gap: 6px }
+:root[data-theme="dark"] .goal, :root[data-theme="dark"] .goal h2 { color: var(--bg) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .goal, :root:not([data-theme="light"]) .goal h2 { color: var(--bg) } }
+
+.ready { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 4px; min-width: 0 }
+.tile b { font-weight: 500 }
+.check { color: var(--plum); font-size: 13px; letter-spacing: .04em }
+
+.pillars { display: grid; gap: 0; border-top: 1px solid var(--line) }
+.pillar { display: grid; grid-template-columns: 54px 1fr; gap: 6px 14px; padding-block: 18px; border-bottom: 1px solid var(--line) }
+.pillar .n { font-family: var(--display); font-size: 36px; color: var(--mauve); line-height: 1 }
+.pillar div { display: grid; gap: 6px; min-width: 0 }
+.pillar ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; font-size: 15px }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font-weight: 500; font-size: 12.5px; color: var(--muted); letter-spacing: .04em }
+td:first-child { font-family: var(--display); font-size: 19px; color: var(--plum); white-space: nowrap }
+tr:last-child td { border-bottom: 0 }
+
+.months { display: grid; gap: 14px }
+.month { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 10px }
+.month .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap }
+.tag { font-size: 12px; padding: 3px 11px; border-radius: 999px; background: var(--blush); color: var(--plum) }
+.month ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 15px }
+
+.you { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none }
+.you li { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px }
+.you b { font-weight: 500 }
+.time { font-size: 13px; color: var(--clay) }
+
+.ideas { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px }
+.note { border-left: 2px solid var(--mauve); padding-left: 14px; color: var(--muted); font-size: 15px }
+.links { display: grid; gap: 8px }
+.links a { color: var(--plum) }
+</style>
+
+<div class="wrap">
+
+<header style="display:grid;gap:14px">
+  <div class="moons" aria-hidden="true">
+    <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="var(--mauve)"/></svg>
+    <svg viewBox="0 0 20 20"><defs><mask id="m1"><circle cx="10" cy="10" r="9" fill="#fff"/><circle cx="5" cy="10" r="9" fill="#000"/></mask></defs><circle cx="10" cy="10" r="8.5" fill="none" stroke="var(--mauve)"/><circle cx="10" cy="10" r="9" fill="var(--mauve)" mask="url(#m1)"/></svg>
+    <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="var(--mauve)"/><path d="M10 1.5 A8.5 8.5 0 0 1 10 18.5 Z" fill="var(--mauve)"/></svg>
+    <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="var(--mauve)"/><path d="M10 1.5 A8.5 8.5 0 0 1 10 18.5 A4.7 8.5 0 0 1 10 1.5 Z" fill="var(--mauve)"/></svg>
+    <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="var(--mauve)"/></svg>
+  </div>
+  <div class="eyebrow">New Moon Yoga Studio · Novembre 2026 – Janvier 2027</div>
+  <h1>Plan marketing <i>New Moon</i></h1>
+  <p class="lede">Un plan simple sur trois mois pour faire connaître le studio aux Jardins de Carthage et remplir les cours. Peu d'efforts pour vous, toujours les mêmes gestes, chaque semaine.</p>
+</header>
+
+<section class="goal">
+  <h2>L'objectif</h2>
+  <ul>
+    <li>Plus de personnes du quartier qui découvrent New Moon.</li>
+    <li>Plus de séances d'essai, et des élèves qui reviennent.</li>
+    <li>Des cours du soir et du yoga air plus remplis.</li>
+  </ul>
+  <p style="font-size:14px;opacity:.85">Les chiffres de départ seront relevés la première semaine (statistiques Instagram et réservations de l'appli). Nous fixerons ensuite des objectifs chiffrés avec vous.</p>
+</section>
+
+<section>
+  <h2>Ce qui est déjà prêt</h2>
+  <div class="ready">
+    <div class="tile"><span class="check">✓ En ligne</span><b>L'appli de réservation</b><p class="small">Réserver prend deux touches. Places restantes en direct, liste d'attente automatique.</p></div>
+    <div class="tile"><span class="check">✓ À imprimer</span><b>La carte QR du comptoir</b><p class="small">Format A6, aux couleurs du studio. Chaque visiteuse repart en sachant où réserver.</p></div>
+    <div class="tile"><span class="check">✓ À publier</span><b>La story Instagram</b><p class="small">Même design, avec le QR code. À mettre en story et en « à la une ».</p></div>
+    <div class="tile"><span class="check">✓ Rédigé</span><b>Les textes de novembre</b><p class="small">13 publications prévues, avec leurs légendes en français, prêtes à copier.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Les trois piliers</h2>
+  <div class="pillars">
+    <div class="pillar"><span class="n">1</span><div><h3>Instagram, régulier</h3><p>Trois publications par semaine, toujours les mêmes jours. La régularité compte plus que la quantité.</p>
+      <ul><li>Des vidéos courtes (Reels) : ce sont elles qu'Instagram montre aux personnes qui ne vous suivent pas encore.</li><li>Des conseils utiles (le dos, la respiration, le cycle) que l'on garde et que l'on partage à une amie.</li><li>Le vrai studio : les cours, le yoga air, la pleine lune.</li></ul></div></div>
+    <div class="pillar"><span class="n">2</span><div><h3>Le bouche-à-oreille</h3><p>Une élève contente est la meilleure publicité, à condition de lui donner un moyen simple d'en parler.</p>
+      <ul><li>Demander un avis Google après le cours, aux élèves fidèles.</li><li>Inviter chaque élève à venir avec une amie pour une séance d'essai.</li><li>La carte QR posée au comptoir et à l'entrée.</li></ul></div></div>
+    <div class="pillar"><span class="n">3</span><div><h3>Le quartier</h3><p>Les Jardins de Carthage sont votre premier public. Se montrer là où vivent vos futures élèves.</p>
+      <ul><li>Un café, une boutique bien-être ou un salon voisin : échanger une affiche ou une publication commune.</li><li>Publier les vidéos de Rania en « collaboration » avec son compte, pour toucher aussi ses abonnés.</li><li>Toujours ajouter le lieu « Les Jardins de Carthage » aux publications.</li></ul></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Une semaine type</h2>
+  <p class="small">Toujours le même rythme. Les textes sont préparés à l'avance.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Jour</th><th>Quoi</th><th>Pourquoi</th></tr></thead>
+    <tbody>
+      <tr><td>Lundi</td><td>Story « Il reste des places cette semaine »</td><td>Remplir les cours qui ne sont pas complets</td></tr>
+      <tr><td>Mardi</td><td>Une vidéo courte (Reel)</td><td>Toucher de nouvelles personnes</td></tr>
+      <tr><td>Jeudi</td><td>Un carrousel de conseils</td><td>Être gardé et partagé</td></tr>
+      <tr><td>Week-end</td><td>Une vidéo ou photo du vrai studio</td><td>Montrer que le lieu est vivant</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Les trois prochains mois</h2>
+  <div class="months">
+    <div class="month"><div class="top"><h3>Novembre</h3><span class="tag">Lancer l'appli</span></div>
+      <ul><li>Annoncer la réservation en deux touches, épingler la vidéo en haut du profil.</li><li>Présenter Rania et le cycle équilibre hormonal.</li><li>Pleine lune le mardi 24 novembre : annonce, stories le soir même, vidéo souvenir.</li><li>Fin du mois : rappel des cartes et tarifs pour décembre.</li></ul></div>
+    <div class="month"><div class="top"><h3>Décembre</h3><span class="tag">Offrir du yoga</span></div>
+      <ul><li>Idée à valider par vous : une carte cadeau (séance d'essai ou carte de séances) à offrir pour les fêtes.</li><li>Pleine lune le jeudi 24 décembre : un rendez-vous de fin d'année.</li><li>Conseils « tenir le rythme pendant les fêtes » : respiration, dos, sommeil.</li></ul></div>
+    <div class="month"><div class="top"><h3>Janvier</h3><span class="tag">Nouvelle année</span></div>
+      <ul><li>Les bonnes résolutions : mettre en avant les débutantes et la séance d'essai.</li><li>Pleine lune du vendredi 22 janvier.</li><li>Premier bilan : ce qui a le mieux marché, et ce que l'on garde.</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>Ce dont nous avons besoin de vous</h2>
+  <ul class="you">
+    <li><b>Filmer 30 minutes tous les 15 jours</b><span class="small">Une liste de 8 plans simples vous est donnée : un cours de dos, le yoga air, Rania qui se présente, l'arrivée au studio. À la verticale, à la lumière du jour, avec l'accord des élèves.</span><span class="time">30 min · tous les 15 jours</span></li>
+    <li><b>Les détails de la pleine lune</b><span class="small">Heure, durée, prix, nombre de places, pour l'annonce du 18 novembre.</span><span class="time">5 min · cette semaine</span></li>
+    <li><b>Une ou deux phrases d'élèves</b><span class="small">Un vrai retour d'une élève, avec son accord, pour une publication « avis ».</span><span class="time">5 min</span></li>
+    <li><b>Vos statistiques Instagram</b><span class="small">Des captures d'écran : Tableau de bord professionnel → Statistiques, 30 derniers jours. C'est notre point de départ.</span><span class="time">5 min · une fois par mois</span></li>
+    <li><b>Valider les textes</b><span class="small">Les légendes sont rédigées pour vous. Vous les relisez, vous corrigez ce qui ne vous ressemble pas.</span><span class="time">10 min · chaque semaine</span></li>
+  </ul>
+  <p class="note">Une question pour vous : écrivez-vous aussi en tunisien ou en arabe ? Nous adapterons les textes à votre façon de parler.</p>
+</section>
+
+<section>
+  <h2>Comment nous saurons que ça marche</h2>
+  <p>Chaque mois, nous regardons ensemble cinq chiffres simples.</p>
+  <div class="ideas">
+    <div class="tile"><b>Personnes touchées</b><p class="small">Combien de personnes ont vu vos publications sur Instagram.</p></div>
+    <div class="tile"><b>Nouveaux abonnés</b><p class="small">Combien de personnes ont commencé à vous suivre.</p></div>
+    <div class="tile"><b>Nouvelles inscrites</b><p class="small">Les comptes créés dans l'appli de réservation.</p></div>
+    <div class="tile"><b>Réservations</b><p class="small">Le nombre de places réservées, cours par cours.</p></div>
+    <div class="tile"><b>Avis Google</b><p class="small">Le nombre d'avis et la note du studio.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Vos liens</h2>
+  <div class="links">
+    <p>Appli pour les élèves : <a href="https://newmoonyogastudio.vercel.app">newmoonyogastudio.vercel.app</a></p>
+    <p>Votre espace équipe : <a href="https://newmoonyogastudio.vercel.app/staff">newmoonyogastudio.vercel.app/staff</a></p>
+  </div>
+</section>
+
+</div>
