@@ -8,6 +8,7 @@ import { useSyncExternalStore } from "react";
 import { supabase } from "./supabase";
 import { STATE_VERSION } from "./seed";
 import type { Result } from "./store";
+import type { DashBooking, DashSession } from "./stats";
 import type {
   ActivityEntry,
   AuthStatus,
@@ -318,6 +319,22 @@ export const remote = {
       upcoming: m.upcoming as number,
       blocked: !!m.blocked,
     }));
+  },
+
+  // past classes and their bookings since `fromIso`, for the owner's overview (read-only)
+  async dashboard(fromIso: string): Promise<{ sessions: DashSession[]; bookings: DashBooking[] }> {
+    const c = db();
+    const { data: ses } = await c
+      .from("sessions")
+      .select("id, title, starts_at, capacity")
+      .gte("starts_at", fromIso)
+      .lt("starts_at", new Date().toISOString())
+      .eq("cancelled", false);
+    const sessions = ((ses ?? []) as Row[]).map((s) => ({ id: s.id as string, title: s.title as string, start: s.starts_at as string, capacity: s.capacity as number }));
+    if (!sessions.length) return { sessions, bookings: [] };
+    const { data: bk } = await c.from("bookings").select("session_id, user_id, status").in("session_id", sessions.map((s) => s.id));
+    const bookings = ((bk ?? []) as Row[]).map((b) => ({ sessionId: b.session_id as string, userId: (b.user_id as string) ?? null, status: b.status as string }));
+    return { sessions, bookings };
   },
 
   async invites(): Promise<{ email: string; role: Role }[]> {

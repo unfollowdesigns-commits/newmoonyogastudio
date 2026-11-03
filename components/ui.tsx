@@ -114,6 +114,7 @@ export function Chip({ active, children, onClick }: { active?: boolean; children
 }
 
 const paths: Record<string, ReactNode> = {
+  chart: <path d="M4 20h16M7 16.5V11M12 16.5V6.5M17 16.5v-4" />,
   calendar: <><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 9.5h17M8 3v4M16 3v4" /></>,
   list: <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />,
   user: <><circle cx="12" cy="8.5" r="3.8" /><path d="M4.5 20c1.2-3.6 4-5.3 7.5-5.3s6.3 1.7 7.5 5.3" /></>,

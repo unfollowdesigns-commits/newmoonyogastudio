@@ -51,6 +51,7 @@ export const setBlocked = (memberId: string, blocked: boolean) =>
   LIVE ? remote.setBlocked(memberId, blocked) : ok(demo.setBlocked(memberId, blocked));
 export const setRole = (email: string, role: Role, teacher: string | null) =>
   LIVE ? remote.setRole(email, role, teacher) : ok({ ok: false, message: "msg.demoOnly" });
+export const loadDashboard = (fromIso: string) => (LIVE ? remote.dashboard(fromIso) : Promise.resolve(demo.demoDashboard(fromIso)));
 export const loadInvites = () => (LIVE ? remote.invites() : Promise.resolve([]));
 
 // ——— account ———

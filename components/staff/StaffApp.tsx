@@ -28,8 +28,9 @@ import type { Booking, Session, StudioState } from "@/lib/types";
 import { Avatar, CapacityBar, Icon, Loading, Logo, Sheet, Toast, Wordmark, useToast } from "../ui";
 import { AuthSheet } from "../AuthSheet";
 import { Members, Team } from "./People";
+import { Overview } from "./Overview";
 
-type View = "classes" | "members" | "inventory" | "hours" | "team" | "settings";
+type View = "overview" | "classes" | "members" | "inventory" | "hours" | "team" | "settings";
 type Notify = (r: Result | Promise<Result>) => void;
 
 export default function StaffApp() {
@@ -82,6 +83,7 @@ export default function StaffApp() {
   const onShift = studio.shifts.some((s) => s.staffId === staffId && !s.end);
 
   const nav: [View, string, string][] = [
+    ...(isOwner ? ([["overview", "chart", t("staff.nav.overview")]] as [View, string, string][]) : []),
     ["classes", "users", t("staff.nav.classes")],
     ["members", "user", t("staff.nav.members")],
     ["inventory", "box", t("staff.nav.inventory")],
@@ -129,6 +131,7 @@ export default function StaffApp() {
         <div className="mb-5 lg:hidden">
           <StaffSwitcher studio={studio} staffId={staffId} setStaffId={setStaffId} onShift={onShift} />
         </div>
+        {view === "overview" && isOwner && <Overview studio={studio} />}
         {view === "classes" && <Classes studio={studio} staffId={staffId} teacherId={teacherId} notify={notify} />}
         {view === "members" && <Members studio={studio} notify={notify} />}
         {view === "inventory" && <Inventory studio={studio} notify={notify} />}

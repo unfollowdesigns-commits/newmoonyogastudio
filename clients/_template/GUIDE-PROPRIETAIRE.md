@@ -29,6 +29,19 @@ Pas de mot de passe à retenir. Le téléphone reste connecté.
 Si le cours est complet, elle peut rejoindre la **liste d'attente**. Dès qu'une place se libère, la première
 de la liste est inscrite automatiquement.
 
+## Votre tableau de bord → onglet **Aperçu** (propriétaire seulement)
+
+D'un coup d'œil, sur les 30 ou 90 derniers jours :
+
+- **Membres** : combien de personnes sont inscrites, et combien de nouvelles.
+- **Cours par membre** : combien de cours une élève suit en moyenne.
+- **Taux de retour** : parmi les élèves venues une fois, combien sont revenues. C'est le chiffre de la fidélité.
+- **Remplissage** : la part des places prises, cours par cours. Les cours les moins remplis sont ceux à mettre en avant sur Instagram.
+- **À relancer** : les élèves déjà venues mais absentes depuis un moment, avec un bouton WhatsApp pour leur écrire.
+
+> Pour que les chiffres soient justes, **pointez ✓ chaque élève à chaque cours** (onglet Cours & listes).
+> Si des réservations passées ne sont pas pointées, l'Aperçu vous le signale.
+
 ## 3. Où sont mes clientes ? → onglet **Membres**
 
 - Toutes les personnes inscrites : nom, **WhatsApp** (touchez le numéro pour lui écrire), email, date

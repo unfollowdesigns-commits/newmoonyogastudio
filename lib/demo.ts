@@ -6,6 +6,7 @@ import { createSeed, STATE_VERSION } from "./seed";
 import { hoursUntil } from "./date";
 import type { MemberRow, Session, Settings, StudioState } from "./types";
 import type { Result } from "./store";
+import type { DashBooking, DashSession } from "./stats";
 import { activeBookings, bookingClosed, isPast, myBooking, myWaitlistPosition, spotsLeft, takenSpots } from "./helpers";
 
 const KEY = `${studio.id}-studio-v${STATE_VERSION}`;
@@ -303,6 +304,16 @@ export function resetDemo() {
   state = createSeed();
   persist();
   emit();
+}
+
+// past classes for the owner's overview, from the demo rosters
+export function demoDashboard(fromIso: string): { sessions: DashSession[]; bookings: DashBooking[] } {
+  const now = Date.now();
+  const past = get().sessions.filter((s) => s.start >= fromIso && new Date(s.start).getTime() < now);
+  return {
+    sessions: past.map((s) => ({ id: s.id, title: s.title, start: s.start, capacity: s.capacity })),
+    bookings: past.flatMap((s) => s.bookings.map((b) => ({ sessionId: s.id, userId: b.guest ? null : b.memberId, status: b.status }))),
+  };
 }
 
 // members list for the staff portal, derived from the demo rosters
