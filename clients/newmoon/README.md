@@ -51,7 +51,7 @@ All in [`studio.ts`](studio.ts). Summary:
 
 ## Still to get from the owner
 
-- [x] Teacher for every class: Rania Sam (16/11). Live DB still stores "team" on some classes; the app shows them as Rania (`teacherAliases`). Clean-up SQL when Supabase access is back: `update weekly_slots set teacher_id='rania' where teacher_id='team'; update sessions set teacher_id='rania' where teacher_id='team';`
+- [x] Teacher for every class: Rania Sam (16/11). Live database updated too (weekly_slots, sessions); `teacherAliases` stays as a safety net.
 - [ ] Street spelling: "Kart Hadsht" vs "Kart Hadasht"
 - [ ] Full-moon event details: time, length, spots, price (could become a bookable class)
 - [ ] Does she want card/pack tracking in the app (classes left per client)?
