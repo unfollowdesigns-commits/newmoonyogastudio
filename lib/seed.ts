@@ -13,7 +13,7 @@ import type {
   WaitlistEntry,
 } from "./types";
 
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 9;
 export const SCHEDULE_DAYS = 14;
 
 export const STUDIO = { ...studio.contact, name: studio.name, currency: studio.currency };

@@ -7,8 +7,7 @@ on conflict (id) do nothing;
 update public.settings set timezone = 'Africa/Tunis' where id = 1;
 
 insert into public.teachers (id, name, tone, sort) values
-  ('rania', 'Rania Sam', '#ead3c6', 1),
-  ('team', 'New Moon Team', '#e4dbd8', 2)
+  ('rania', 'Rania Sam', '#ead3c6', 1)
 on conflict (id) do nothing;
 
 insert into public.rooms (id, capacity, cols, unit) values
@@ -17,16 +16,16 @@ insert into public.rooms (id, capacity, cols, unit) values
 on conflict (id) do nothing;
 
 insert into public.weekly_slots (id, weekday, start_time, title, style, level, teacher_id, room_id, duration_min, desc_key) values
-  (1, 1, '19:30', 'Yoga anti stress', 'Anti-stress', 'All Levels', 'team', 'studio', 90, 'stress'),
-  (2, 2, '19:30', 'Yoga pour le dos', 'Back care', 'All Levels', 'team', 'studio', 90, 'dos'),
+  (1, 1, '19:30', 'Yoga anti stress', 'Anti-stress', 'All Levels', 'rania', 'studio', 90, 'stress'),
+  (2, 2, '19:30', 'Yoga pour le dos', 'Back care', 'All Levels', 'rania', 'studio', 90, 'dos'),
   (3, 3, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
-  (4, 3, '19:30', 'Yoga débutant +', 'Beginner+', 'Beginner', 'team', 'studio', 90, 'debutant'),
+  (4, 3, '19:30', 'Yoga débutant +', 'Beginner+', 'Beginner', 'rania', 'studio', 90, 'debutant'),
   (5, 4, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
-  (6, 4, '19:30', 'Yoga santé colonne vertébrale', 'Back care', 'All Levels', 'team', 'studio', 90, 'colonne'),
+  (6, 4, '19:30', 'Yoga santé colonne vertébrale', 'Back care', 'All Levels', 'rania', 'studio', 90, 'colonne'),
   (7, 5, '08:30', 'Yoga pour l''équilibre hormonal', 'Women''s yoga', 'All Levels', 'rania', 'studio', 120, 'hormonal'),
-  (8, 5, '19:30', 'Yoga restoratif', 'Restorative', 'All Levels', 'team', 'studio', 90, 'restoratif'),
-  (9, 6, '09:00', 'Yoga air', 'Aerial', 'All Levels', 'team', 'aerial', 60, 'air'),
-  (10, 0, '10:00', 'Yoga air', 'Aerial', 'All Levels', 'team', 'aerial', 60, 'air')
+  (8, 5, '19:30', 'Yoga restoratif', 'Restorative', 'All Levels', 'rania', 'studio', 90, 'restoratif'),
+  (9, 6, '09:00', 'Yoga air', 'Aerial', 'All Levels', 'rania', 'aerial', 60, 'air'),
+  (10, 0, '10:00', 'Yoga air', 'Aerial', 'All Levels', 'rania', 'aerial', 60, 'air')
 on conflict (id) do nothing;
 select setval(pg_get_serial_sequence('public.weekly_slots', 'id'), greatest((select max(id) from public.weekly_slots), 1));
 

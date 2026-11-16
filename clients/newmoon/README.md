@@ -51,7 +51,7 @@ All in [`studio.ts`](studio.ts). Summary:
 
 ## Still to get from the owner
 
-- [ ] Teachers' names for the evening classes (shown as "Équipe New Moon" for now)
+- [x] Teacher for every class: Rania Sam (16/11). Live DB still stores "team" on some classes; the app shows them as Rania (`teacherAliases`). Clean-up SQL when Supabase access is back: `update weekly_slots set teacher_id='rania' where teacher_id='team'; update sessions set teacher_id='rania' where teacher_id='team';`
 - [ ] Street spelling: "Kart Hadsht" vs "Kart Hadasht"
 - [ ] Full-moon event details: time, length, spots, price (could become a bookable class)
 - [ ] Does she want card/pack tracking in the app (classes left per client)?
@@ -66,5 +66,6 @@ All in [`studio.ts`](studio.ts). Summary:
 
 | Date | What |
 |---|---|
+| 16/11/2026 | Every class shows Rania Sam instead of "Équipe New Moon" (clients thought it was another teacher). |
 | 15/10/2026 | Booking cut-off 8h → 2h (owner's new rule; full-moon event keeps 24h). |
 | 15/10/2026 | Live: Supabase installed and hardened, Vercel connected, Gmail sender, owner accounts. First real booking tested (Yoga restoratif, 16/10). |

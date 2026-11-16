@@ -5,6 +5,7 @@
 // late-cancel rules and waitlist promotion, so two people can never take the same last spot.
 
 import { useSyncExternalStore } from "react";
+import { studio } from "@/clients";
 import { supabase } from "./supabase";
 import { STATE_VERSION } from "./seed";
 import type { Result } from "./store";
@@ -140,7 +141,8 @@ async function fetchAll(): Promise<StudioState> {
     unit: r.unit as Room["unit"],
   }));
 
-  const instructors: Instructor[] = ((teachersQ.data ?? []) as Row[]).map((t) => ({
+  const alias = studio.teacherAliases ?? {};
+  const instructors: Instructor[] = ((teachersQ.data ?? []) as Row[]).filter((t) => !alias[t.id as string]).map((t) => ({
     id: t.id as string,
     name: t.name as string,
     role: "teacher",
@@ -153,7 +155,7 @@ async function fetchAll(): Promise<StudioState> {
     title: s.title as string,
     style: s.style as Style,
     level: s.level as Level,
-    instructorId: s.teacher_id as string,
+    instructorId: alias[s.teacher_id as string] ?? (s.teacher_id as string),
     roomId: s.room_id as string,
     start: s.starts_at as string,
     durationMin: s.duration_min as number,

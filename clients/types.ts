@@ -40,6 +40,8 @@ export interface StudioConfig {
   rooms: { id: string; label: Text; capacity: number; cols: number; unit: "mat" | "hammock" }[];
   /** "team" is the generic teacher for classes without a named teacher */
   teachers: { id: string; name: string; label?: Text; tone: string; bio: Text }[];
+  /** old teacher ids still stored in the database, shown as another teacher: { team: "rania" } */
+  teacherAliases?: Record<string, string>;
   /** class descriptions, referenced by timetable[].desc */
   classes: Record<string, Text>;
   /** weekday: 0 = Sunday … 6 = Saturday */

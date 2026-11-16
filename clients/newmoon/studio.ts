@@ -54,25 +54,20 @@ export default {
     { id: "aerial", label: { fr: "Studio aérien", en: "Aerial Studio" }, capacity: 4, cols: 4, unit: "hammock" },
   ],
 
-  // Only Rania Sam is named on the posters; the other classes show the studio team.
+  // Rania Sam teaches every class (owner, 16/11/2026).
   teachers: [
     {
       id: "rania",
       name: "Rania Sam",
       tone: "#ead3c6",
       bio: {
-        fr: "Professeure certifiée en yoga féminin. Elle guide le cycle équilibre hormonal.",
-        en: "Professeure certifiée en yoga féminin. Guides the hormonal balance series.",
+        fr: "Professeure certifiée en yoga féminin. Elle enseigne tous les cours du studio.",
+        en: "Certified women's yoga teacher. She teaches every class at the studio.",
       },
     },
-    {
-      id: "team",
-      name: "New Moon Team",
-      label: { fr: "Équipe New Moon", en: "New Moon Team" },
-      tone: "#e4dbd8",
-      bio: { fr: "Cours donné par l'équipe de professeurs du New Moon Yoga Studio.", en: "Taught by the New Moon Yoga Studio teaching team." },
-    },
   ],
+  // the live database still calls some classes "team": show them as Rania's
+  teacherAliases: { team: "rania" },
 
   classes: {
     hormonal: {
@@ -107,16 +102,16 @@ export default {
 
   // Lundi–vendredi 19h30 (1h30) · mer/jeu/ven 8h30 yoga thérapeutique (2h) · sam 9h & dim 10h yoga air (1h)
   timetable: [
-    { day: 1, time: "19:30", title: "Yoga anti stress", style: "Anti-stress", level: "All Levels", teacher: "team", room: "studio", minutes: 90, desc: "stress" },
-    { day: 2, time: "19:30", title: "Yoga pour le dos", style: "Back care", level: "All Levels", teacher: "team", room: "studio", minutes: 90, desc: "dos" },
+    { day: 1, time: "19:30", title: "Yoga anti stress", style: "Anti-stress", level: "All Levels", teacher: "rania", room: "studio", minutes: 90, desc: "stress" },
+    { day: 2, time: "19:30", title: "Yoga pour le dos", style: "Back care", level: "All Levels", teacher: "rania", room: "studio", minutes: 90, desc: "dos" },
     { day: 3, time: "08:30", title: "Yoga pour l'équilibre hormonal", style: "Women's yoga", level: "All Levels", teacher: "rania", room: "studio", minutes: 120, desc: "hormonal" },
-    { day: 3, time: "19:30", title: "Yoga débutant +", style: "Beginner+", level: "Beginner", teacher: "team", room: "studio", minutes: 90, desc: "debutant" },
+    { day: 3, time: "19:30", title: "Yoga débutant +", style: "Beginner+", level: "Beginner", teacher: "rania", room: "studio", minutes: 90, desc: "debutant" },
     { day: 4, time: "08:30", title: "Yoga pour l'équilibre hormonal", style: "Women's yoga", level: "All Levels", teacher: "rania", room: "studio", minutes: 120, desc: "hormonal" },
-    { day: 4, time: "19:30", title: "Yoga santé colonne vertébrale", style: "Back care", level: "All Levels", teacher: "team", room: "studio", minutes: 90, desc: "colonne" },
+    { day: 4, time: "19:30", title: "Yoga santé colonne vertébrale", style: "Back care", level: "All Levels", teacher: "rania", room: "studio", minutes: 90, desc: "colonne" },
     { day: 5, time: "08:30", title: "Yoga pour l'équilibre hormonal", style: "Women's yoga", level: "All Levels", teacher: "rania", room: "studio", minutes: 120, desc: "hormonal" },
-    { day: 5, time: "19:30", title: "Yoga restoratif", style: "Restorative", level: "All Levels", teacher: "team", room: "studio", minutes: 90, desc: "restoratif" },
-    { day: 6, time: "09:00", title: "Yoga air", style: "Aerial", level: "All Levels", teacher: "team", room: "aerial", minutes: 60, desc: "air" },
-    { day: 0, time: "10:00", title: "Yoga air", style: "Aerial", level: "All Levels", teacher: "team", room: "aerial", minutes: 60, desc: "air" },
+    { day: 5, time: "19:30", title: "Yoga restoratif", style: "Restorative", level: "All Levels", teacher: "rania", room: "studio", minutes: 90, desc: "restoratif" },
+    { day: 6, time: "09:00", title: "Yoga air", style: "Aerial", level: "All Levels", teacher: "rania", room: "aerial", minutes: 60, desc: "air" },
+    { day: 0, time: "10:00", title: "Yoga air", style: "Aerial", level: "All Levels", teacher: "rania", room: "aerial", minutes: 60, desc: "air" },
   ],
 
   inventory: [
